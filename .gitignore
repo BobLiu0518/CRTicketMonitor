@@ -1,0 +1,6 @@
+.vscode/
+node_modules/
+config.json
+cookie.dat
+log.log
+ua.dat

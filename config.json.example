@@ -1,0 +1,15 @@
+{
+    "watch": [
+        {
+            "api": "https://kyfw.12306.cn/otn/leftTicket/queryG?leftTicketDTO.train_date=2024-10-01&leftTicketDTO.from_station=AOH&leftTicketDTO.to_station=VNP&purpose_codes=ADULT",
+            "trains": [
+                "G2|SHH|VNP|SHH|VNP"
+            ]
+        }
+    ],
+    "serverChan": {
+        "agentId": "",
+        "secret": "",
+        "companyId": ""
+    }
+}
