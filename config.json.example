@@ -11,5 +11,6 @@
         "agentId": "",
         "secret": "",
         "companyId": ""
-    }
+    },
+    "interval": 15
 }

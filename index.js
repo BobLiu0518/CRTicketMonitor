@@ -56,4 +56,4 @@ function update() {
 
 sendMsg('CRTicketMonitor 已启动！');
 update();
-setInterval(update, 15 * 60 * 1000);
+setInterval(update, config.interval * 60 * 1000);
