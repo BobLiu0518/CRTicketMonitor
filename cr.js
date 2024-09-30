@@ -1,4 +1,3 @@
-import fs from 'fs';
 import request from 'sync-request';
 import moment from 'moment';
 
