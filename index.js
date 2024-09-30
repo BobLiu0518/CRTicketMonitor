@@ -1,38 +1,17 @@
 import fs from 'fs';
 import { exit } from 'process';
 import ChinaRailway from './cr.js';
+import Notifications from './notifications.js';
 import { sleep, time, log } from './utils.js';
-import { sendToWecom } from './wecomChan.js';
 
 let config = JSON.parse(fs.readFileSync('config.json', 'UTF-8') ?? '{}');
 let { stationCode, stationName } = await ChinaRailway.getStationData();
+let notifications = [];
 
 async function sendMsg(msg) {
     msg = '[CRTicketMonitor]\n' + time() + '\n' + msg;
-    if (config.notification.wecomChan !== undefined) {
-        try {
-            await sendToWecom({
-                text: msg,
-                wecomAgentId: config.notification.wecomChan.agentId,
-                wecomSecret: config.notification.wecomChan.secret,
-                wecomCId: config.notification.wecomChan.companyId,
-                wecomTouid: config.notification.wecomChan.toUid,
-            });
-        } catch (e) {
-            log.error('WeCom 推送失败：', e);
-        }
-    }
-    if (config.notification.http !== undefined) {
-        if (typeof config.notification.http.url == 'string') {
-            config.notification.http.url = [config.notification.http.url];
-        }
-        try {
-            config.notification.http.url.forEach((url) => {
-                fetch(url + encodeURIComponent(msg));
-            });
-        } catch (e) {
-            log.error('HTTP 推送失败：', e);
-        }
+    for (let notification of notifications) {
+        notification.send(msg);
     }
 }
 
@@ -196,12 +175,16 @@ function checkConfig() {
         log.line();
     }
 
-    let notifications = Object.keys(config.notification);
+    for (let notification of config.notifications) {
+        let n = new Notifications[notification.type](notification);
+        notifications.push(n);
+        log.direct(`已配置消息推送：${n.info.name} (${n.info.description})`);
+    }
     if (!notifications.length) {
         log.warn('未配置消息推送');
-    } else {
-        log.direct('配置的消息推送：' + notifications.join(' '));
     }
+    log.line();
+
     if (!config.interval) config.interval = 15;
     if (!config.delay) config.delay = 5;
     log.direct(

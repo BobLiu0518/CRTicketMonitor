@@ -13,17 +13,19 @@
             ]
         }
     ],
-    "notification": {
-        "wecomChan": {
+    "notifications": [
+        {
+            "type": "WecomChan",
             "agentId": "",
             "secret": "",
             "companyId": "",
             "toUid": "@all"
         },
-        "http": {
+        {
+            "type": "HTTP",
             "url": ""
         }
-    },
+    ],
     "interval": 15,
     "delay": 5
 }

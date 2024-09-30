@@ -47,9 +47,10 @@ $ npm i
     ],
 
     // 推送配置（详见下文）
-    "notification": {
-        // Wecom 酱配置
-        "wecomChan": {
+    "notifications": [
+        {
+            // Wecom 酱推送
+            "type": "WecomChan",
             // 应用 ID
             "agentId": "",
             // 应用 Secret
@@ -59,12 +60,13 @@ $ npm i
             // 发送目标 Uid
             "toUid": "@all"
         },
-        // HTTP 配置
-        "http": {
-            // 推送地址，可以是一个或多个
+        {
+            // HTTP 推送
+            "type": "HTTP",
+            // 推送地址
             "url": ""
         }
-    },
+    ],
 
     // 刷新间隔（分钟）
     "interval": 15,
@@ -75,7 +77,9 @@ $ npm i
 
 ## 推送配置
 
-在 `config.json` 中，为以下推送方式（任选其一即可）填写配置项。不需要使用的推送方式请直接删除其配置项。
+在 `config.json` 中，选择以下推送配置项中的一项或多项填写。
+
+同一种类的配置项可以设置多个。
 
 ### Wecom 酱推送
 
@@ -88,8 +92,6 @@ $ npm i
 可以搭配 [OneBot](https://github.com/botuniverse/onebot-11)、[Sever 酱 Turbo](https://sct.ftqq.com/)、[IFTTT](https://ifttt.com/maker_webhooks) 或其他任何可以使用 HTTP API 进行推送的平台进行推送。
 
 直接在 `config.json` 中填写 URL 即可，消息的内容在经过 URL Encode 后会被拼接至 URL 末尾。
-
-支持填写一个（单个字符串）或多个（包含多个字符串的数组）URL。
 
 使用例（其中部分内容使用`××××`代替，请自行填写）：
 
@@ -105,7 +107,7 @@ Server 酱 Turbo：`https://sctapi.ftqq.com/××××.send?title=CRTicketMontor�
 
 ### 其他
 
-当然，你也可以自行选用其他的推送方式，编辑 `index.js` 中的 `sendMsg` 函数即可。
+当然，你也可以自行选用其他的推送方式，编辑 `notifications.js` 即可。
 
 ## 席别设置
 
