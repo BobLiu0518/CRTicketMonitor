@@ -1,6 +1,6 @@
 import fs from 'fs';
 import ChinaRailway from './cr.js';
-import { time, sleep } from './utils.js';
+import { sleep, time, log } from './utils.js';
 import { sendToWecom } from './serverChan.js';
 
 let config = JSON.parse(fs.readFileSync('config.json', 'UTF-8') ?? '{}');
@@ -17,20 +17,13 @@ function sendMsg(msg) {
                 wecomCId: config.notification.wecomChan.companyId,
             });
         } catch (e) {
-            console.error(time(), '[Error]', '发送 WeCom 提醒失败：', e);
+            log.error('发送 WeCom 提醒失败：', e);
         }
     }
 }
 
 function searchTickets(search) {
-    console.log(
-        time(),
-        '[Info]',
-        '查询',
-        search.date,
-        search.from + '→' + search.to,
-        '车票：'
-    );
+    log.info('查询', search.date, search.from + '→' + search.to, '车票：');
     let data = ChinaRailway.checkTickets(
         search.date,
         stationCode[search.from],
@@ -80,7 +73,7 @@ function determineRemainTickets(
     if (!remain && seatCategory !== undefined) {
         msg = seatCategory.join('/') + ' ' + msg;
     }
-    console.log(time(), '[Info]', '-', trainDescription, msg);
+    log.info('-', trainDescription, msg);
     if (remain) {
         sendMsg(trainDescription + '\n' + msg);
     }
@@ -140,28 +133,28 @@ function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
 }
 
 function update() {
-    console.log(time(), '[Info]', '开始查询余票');
+    log.info('开始查询余票');
     try {
         config.watch.forEach((search) => {
             searchTickets(search);
             sleep(config.delay * 1000);
         });
     } catch (e) {
-        console.error(time(), '[Error]', e);
+        log.error(e);
         sendMsg('错误：' + e.message);
     }
-    console.log(time(), '[Info]', '余票查询结束');
-    console.log();
+    log.info('余票查询结束');
+    log.line();
 }
 
 function displayConfig() {
-    console.log(time(), '[Info]', '当前配置文件：');
-    console.log();
+    log.info('当前配置文件：');
+    log.line();
     config.watch.forEach((search) => {
-        console.log(search.date, search.from + '→' + search.to);
+        log.direct(search.date, search.from + '→' + search.to);
         if (search.trains.length) {
             search.trains.forEach((train) => {
-                console.log(
+                log.direct(
                     '-',
                     train.code,
                     (train.from ?? '(*)') + '→' + (train.to ?? '(*)'),
@@ -172,15 +165,15 @@ function displayConfig() {
                 );
             });
         } else {
-            console.log('-', '全部车次');
+            log.direct('-', '全部车次');
         }
-        console.log();
+        log.line();
     });
 }
 
+console.clear();
 sendMsg('12306 余票监控已启动');
-console.log(time(), '[Info]', '已发送测试提醒，如未收到请检查配置');
-console.log();
+log.info('已发送测试提醒，如未收到请检查配置');
 setInterval(update, config.interval * 60 * 1000);
 displayConfig();
 update();
