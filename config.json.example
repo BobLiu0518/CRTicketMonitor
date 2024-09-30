@@ -17,7 +17,8 @@
         "wecomChan": {
             "agentId": "",
             "secret": "",
-            "companyId": ""
+            "companyId": "",
+            "toUid": "@all"
         },
     }
     "interval": 15,

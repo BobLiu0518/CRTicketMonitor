@@ -58,7 +58,9 @@ $ npm i
             // 应用 Secret
             "secret": "",
             // 企业 ID
-            "companyId": ""
+            "companyId": "",
+            // 发送目标 Uid
+            "toUid": "@all"
         }
     },
 

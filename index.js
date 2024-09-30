@@ -15,6 +15,7 @@ function sendMsg(msg) {
                 wecomAgentId: config.notification.wecomChan.agentId,
                 wecomSecret: config.notification.wecomChan.secret,
                 wecomCId: config.notification.wecomChan.companyId,
+                wecomTouid: config.notification.wecomChan.toUid,
             });
         } catch (e) {
             log.error('发送 WeCom 提醒失败：', e);
