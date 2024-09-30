@@ -1,7 +1,7 @@
 import fs from 'fs';
 import ChinaRailway from './cr.js';
 import { sleep, time, log } from './utils.js';
-import { sendToWecom } from './serverChan.js';
+import { sendToWecom } from './wecomChan.js';
 
 let config = JSON.parse(fs.readFileSync('config.json', 'UTF-8') ?? '{}');
 let { stationCode, stationName } = ChinaRailway.getStationData();
