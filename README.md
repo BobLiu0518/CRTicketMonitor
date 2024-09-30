@@ -22,7 +22,7 @@ $ npm i
 
 ### 配置 config.json
 
-在配置前，先将仓库中的 `config.json.example` 重命名为 `config.json`，然后进行修改。
+在配置前，先将仓库中的 `config.example.json` 重命名为 `config.json`，然后进行修改。
 
 需要注意，`JSON`文件不允许出现注释，如果使用下面的模板，请删除所有 `//` 开头的内容。
 

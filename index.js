@@ -1,4 +1,5 @@
 import fs from 'fs';
+import request from 'sync-request';
 import { exit } from 'process';
 import ChinaRailway from './cr.js';
 import { sleep, time, log } from './utils.js';
@@ -20,6 +21,18 @@ function sendMsg(msg) {
             });
         } catch (e) {
             log.error('WeCom 推送失败：', e);
+        }
+    }
+    if (config.notification.http !== undefined) {
+        if (typeof config.notification.http.url == 'string') {
+            config.notification.http.url = [config.notification.http.url];
+        }
+        try {
+            config.notification.http.url.forEach((url) => {
+                request('GET', url + encodeURIComponent(msg)).getBody();
+            });
+        } catch (e) {
+            log.error('HTTP 推送失败：', e);
         }
     }
 }

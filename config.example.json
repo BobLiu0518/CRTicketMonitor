@@ -20,7 +20,10 @@
             "companyId": "",
             "toUid": "@all"
         },
-    }
+        "http": {
+            "url": ""
+        }
+    },
     "interval": 15,
     "delay": 5
 }
