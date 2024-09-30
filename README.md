@@ -81,12 +81,6 @@ $ npm i
     -   `YB`（未知类型）
     -   `SRRB`（未知类型）
 
-### 配置 Cookie 和 UA
-
-将 12306.cn 的 Cookie 存入 `cookie.dat`。
-
-将浏览器的 User-Agent 存入 `ua.dat`。
-
 ### 运行
 
 本项目针对 `Linux` 服务器进行开发，安装 `screen` 后，运行 `./run.sh` 即可启动。

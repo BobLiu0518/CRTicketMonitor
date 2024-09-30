@@ -3,9 +3,6 @@ import request from 'sync-request';
 import moment from 'moment';
 
 class ChinaRailway {
-    static #cookie = fs.readFileSync('cookie.dat', 'UTF-8') ?? '';
-    static #ua = fs.readFileSync('ua.dat', 'UTF-8') ?? '';
-
     static getStationData() {
         let stationList = request(
             'GET',
@@ -108,8 +105,7 @@ class ChinaRailway {
             '&purpose_codes=ADULT';
         let res = request('GET', api, {
             headers: {
-                Cookie: this.#cookie,
-                'User-Agent': this.#ua,
+                Cookie: 'JSESSIONID=',
             },
         });
         let data = JSON.parse(res.getBody('UTF-8'));
