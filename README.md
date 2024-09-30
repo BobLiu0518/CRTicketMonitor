@@ -59,11 +59,13 @@ $ npm i
             "secret": "",
             // 企业 ID
             "companyId": ""
-        },
-    }
+        }
+    },
 
     // 刷新间隔（分钟）
-    "interval": 15
+    "interval": 15,
+    // 访问延迟（秒）
+    "delay": 5
 }
 ```
 
