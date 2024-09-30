@@ -13,10 +13,13 @@
             ]
         }
     ],
-    "serverChan": {
-        "agentId": "",
-        "secret": "",
-        "companyId": ""
-    },
-    "interval": 15
+    "notification": {
+        "wecomChan": {
+            "agentId": "",
+            "secret": "",
+            "companyId": ""
+        },
+    }
+    "interval": 15,
+    "delay": 5
 }

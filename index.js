@@ -108,7 +108,7 @@ function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
             msg: '区间无票',
         };
     }
-    sleep(5 * 1000);
+    sleep(config.delay * 1000);
     let roundTripData = ChinaRailway.checkTickets(
         trainInfo.start_train_date,
         trainInfo.start_station_telecode,
@@ -144,7 +144,7 @@ function update() {
     try {
         config.watch.forEach((search) => {
             searchTickets(search);
-            sleep(5 * 1000);
+            sleep(config.delay * 1000);
         });
     } catch (e) {
         console.error(time(), '[Error]', e);
