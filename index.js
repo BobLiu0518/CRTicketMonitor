@@ -1,116 +1,19 @@
 import fs from 'fs';
-import moment from 'moment';
-import request from 'sync-request';
+import ChinaRailway from './cr.js';
+import { time, sleep } from './utils.js';
 import { sendToWecom } from './serverChan.js';
 
 let config = JSON.parse(fs.readFileSync('config.json', 'UTF-8') ?? '{}');
-let cookie = fs.readFileSync('cookie.dat', 'UTF-8') ?? '';
-let ua = fs.readFileSync('ua.dat', 'UTF-8') ?? '';
-let stationList = request(
-    'GET',
-    'https://kyfw.12306.cn/otn/resources/js/framework/station_name.js'
-)
-    .getBody('UTF-8')
-    .match(/(?<=').+(?=')/)[0]
-    .split('@')
-    .slice(1);
-let stationCode = {},
-    stationName = {};
-stationList.forEach((station) => {
-    let details = station.split('|');
-    stationCode[details[1]] = details[2];
-    stationName[details[2]] = details[1];
-});
+let { stationCode, stationName } = ChinaRailway.getStationData();
 
 function sendMsg(msg) {
+    return;
     sendToWecom({
-        text: '[CRTicketMonitor] ' + msg,
+        text: '[CRTicketMonitor]\n' + msg,
         wecomAgentId: config.serverChan.agentId,
         wecomSecret: config.serverChan.secret,
         wecomCId: config.serverChan.companyId,
     });
-}
-
-function time() {
-    return moment().format('YYYY/MM/DD HH:mm:ss');
-}
-
-function sleep(n) {
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, n);
-}
-
-function parseTrainInfo(str) {
-    // Ref: https://kyfw.12306.cn/otn/resources/merged/queryLeftTicket_end_js.js
-    let arr = str.split('|');
-    let data = {
-        secretStr: arr[0],
-        buttonTextInfo: arr[1],
-        train_no: arr[2],
-        station_train_code: arr[3],
-        start_station_telecode: arr[4],
-        end_station_telecode: arr[5],
-        from_station_telecode: arr[6],
-        to_station_telecode: arr[7],
-        start_time: arr[8],
-        arrive_time: arr[9],
-        lishi: arr[10],
-        canWebBuy: arr[11],
-        yp_info: arr[12],
-        start_train_date: arr[13],
-        train_seat_feature: arr[14],
-        location_code: arr[15],
-        from_station_no: arr[16],
-        to_station_no: arr[17],
-        is_support_card: arr[18],
-        controlled_train_flag: arr[19],
-        gg_num: arr[20],
-        gr_num: arr[21],
-        qt_num: arr[22],
-        rw_num: arr[23],
-        rz_num: arr[24],
-        tz_num: arr[25],
-        wz_num: arr[26],
-        yb_num: arr[27],
-        yw_num: arr[28],
-        yz_num: arr[29],
-        ze_num: arr[30],
-        zy_num: arr[31],
-        swz_num: arr[32],
-        srrb_num: arr[33],
-        yp_ex: arr[34],
-        seat_types: arr[35],
-        exchange_train_flag: arr[36],
-        houbu_train_flag: arr[37],
-        houbu_seat_limit: arr[38],
-        yp_info_new: arr[39],
-        dw_flag: arr[46],
-        stopcheckTime: arr[48],
-        country_flag: arr[49],
-        local_arrive_time: arr[50],
-        local_start_time: arr[51],
-        bed_level_info: arr[53],
-        seat_discount_info: arr[54],
-        sale_time: arr[55],
-        from_station_name: stationName[arr[6]],
-        to_station_name: stationName[arr[7]],
-    };
-    data.tickets = {
-        优选一等座: data.gg_num,
-        高级软卧: data.gr_num,
-        其他: data.qt_num,
-        软卧: data.rw_num,
-        软座: data.rz_num,
-        特等座: data.tz_num,
-        无座: data.wz_num,
-        YB: data.yb_num /* ? */,
-        硬卧: data.yw_num,
-        硬座: data.yz_num,
-        二等座: data.ze_num,
-        一等座: data.zy_num,
-        商务座: data.swz_num,
-        SRRB: data.srrb_num /* ? */,
-    };
-    return data;
 }
 
 function searchTickets(search) {
@@ -122,26 +25,13 @@ function searchTickets(search) {
         search.from + '→' + search.to,
         '车票：'
     );
-    let api =
-        'https://kyfw.12306.cn/otn/leftTicket/queryG?leftTicketDTO.train_date=' +
-        moment(search.date, 'YYYY/MM/DD').format('YYYY-MM-DD') +
-        '&leftTicketDTO.from_station=' +
-        stationCode[search.from] +
-        '&leftTicketDTO.to_station=' +
-        stationCode[search.to] +
-        '&purpose_codes=ADULT';
-    let res = request('GET', api, {
-        headers: {
-            Cookie: cookie,
-            'User-Agent': ua,
-        },
-    });
-    let data = JSON.parse(res.getBody('UTF-8'));
-    if (!data || !data.status) {
-        throw res;
-    }
+    let data = ChinaRailway.checkTickets(
+        search.date,
+        stationCode[search.from],
+        stationCode[search.to]
+    );
     data.data.result.forEach((row) => {
-        let trainInfo = parseTrainInfo(row);
+        let trainInfo = ChinaRailway.parseTrainInfo(row);
         if (!search.trains) {
             determineRemainTickets(trainInfo);
         } else {
@@ -149,24 +39,39 @@ function searchTickets(search) {
                 if (
                     train.code == trainInfo.station_train_code &&
                     (train.from === undefined ||
-                        train.from == trainInfo.from_station_name) &&
+                        train.from ==
+                            stationName[trainInfo.from_station_telecode]) &&
                     (train.to === undefined ||
-                        train.to == trainInfo.to_station_name)
+                        train.to == stationName[trainInfo.to_station_telecode])
                 ) {
-                    determineRemainTickets(trainInfo);
+                    determineRemainTickets(
+                        trainInfo,
+                        train.checkRoundTrip ?? false
+                    );
                 }
             });
         }
     });
 }
 
-function determineRemainTickets(trainInfo) {
+function determineRemainTickets(trainInfo, checkRoundTrip = false) {
     let trainDescription =
         trainInfo.station_train_code +
         ' ' +
-        trainInfo.from_station_name +
+        stationName[trainInfo.from_station_telecode] +
         '→' +
-        trainInfo.to_station_name;
+        stationName[trainInfo.to_station_telecode];
+    let { remain, msg } = checkRemainTickets(trainInfo, checkRoundTrip);
+    console.log(time(), '[Info]', trainDescription, msg);
+    if (remain) {
+        sendMsg(trainDescription, msg);
+    }
+    if (checkRoundTrip) {
+        sleep(5 * 1000);
+    }
+}
+
+function checkRemainTickets(trainInfo, checkRoundTrip) {
     let remainTypes = [];
     Object.keys(trainInfo.tickets).forEach((type) => {
         if (trainInfo.tickets[type] != '' && trainInfo.tickets[type] != '无') {
@@ -174,18 +79,41 @@ function determineRemainTickets(trainInfo) {
         }
     });
     if (remainTypes.length) {
-        console.log(
-            time(),
-            '[Info]',
-            trainDescription,
-            remainTypes.join(' / ')
-        );
-        sendMsg(
-            '找到车票：\n' + trainDescription + '\n' + remainTypes.join(' / ')
-        );
-    } else {
-        console.log(time(), '[Info]', trainDescription, '区间无票');
+        return {
+            remain: true,
+            msg: remainTypes.join(' / '),
+        };
     }
+    if (!checkRoundTrip) {
+        return {
+            remain: false,
+            msg: '区间无票',
+        };
+    }
+    let roundTripData = ChinaRailway.checkTickets(
+        trainInfo.start_train_date,
+        trainInfo.start_station_telecode,
+        trainInfo.end_station_telecode
+    );
+    for (let row of roundTripData.data.result) {
+        let roundTripInfo = ChinaRailway.parseTrainInfo(row);
+        if (
+            trainInfo.station_train_code == roundTripInfo.station_train_code &&
+            trainInfo.start_station_telecode ==
+                roundTripInfo.from_station_telecode &&
+            trainInfo.end_station_telecode == roundTripInfo.to_station_telecode
+        ) {
+            let { remain } = checkRemainTickets(roundTripInfo, false);
+            return {
+                remain: false,
+                msg: '区间无票，全程' + (remain ? '有票' : '无票'),
+            };
+        }
+    }
+    return {
+        remain: false,
+        msg: '区间无票，全程未知',
+    };
 }
 
 function update() {
@@ -197,7 +125,7 @@ function update() {
         });
     } catch (e) {
         console.error(time(), '[Error]', e);
-        sendMsg('错误：\n' + e.message);
+        sendMsg('错误：' + e.message);
     }
     console.log();
 }
