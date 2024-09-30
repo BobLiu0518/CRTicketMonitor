@@ -106,7 +106,6 @@ class ChinaRailway {
             '&leftTicketDTO.to_station=' +
             to +
             '&purpose_codes=ADULT';
-        console.log('[DEBUG]', 'Checking:', date, from, to);
         let res = request('GET', api, {
             headers: {
                 Cookie: this.#cookie,

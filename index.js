@@ -7,13 +7,16 @@ let config = JSON.parse(fs.readFileSync('config.json', 'UTF-8') ?? '{}');
 let { stationCode, stationName } = ChinaRailway.getStationData();
 
 function sendMsg(msg) {
-    return;
-    sendToWecom({
-        text: '[CRTicketMonitor]\n' + msg,
-        wecomAgentId: config.serverChan.agentId,
-        wecomSecret: config.serverChan.secret,
-        wecomCId: config.serverChan.companyId,
-    });
+    try {
+        sendToWecom({
+            text: '[CRTicketMonitor]\n' + time() + '\n' + msg,
+            wecomAgentId: config.serverChan.agentId,
+            wecomSecret: config.serverChan.secret,
+            wecomCId: config.serverChan.companyId,
+        });
+    } catch (e) {
+        console.error(time(), '[Error]', '发送提醒失败：', e);
+    }
 }
 
 function searchTickets(search) {
@@ -46,6 +49,7 @@ function searchTickets(search) {
                 ) {
                     determineRemainTickets(
                         trainInfo,
+                        train.seatCategory,
                         train.checkRoundTrip ?? false
                     );
                 }
@@ -54,30 +58,41 @@ function searchTickets(search) {
     });
 }
 
-function determineRemainTickets(trainInfo, checkRoundTrip = false) {
+function determineRemainTickets(
+    trainInfo,
+    seatCategory = undefined,
+    checkRoundTrip = false
+) {
     let trainDescription =
         trainInfo.station_train_code +
         ' ' +
         stationName[trainInfo.from_station_telecode] +
         '→' +
         stationName[trainInfo.to_station_telecode];
-    let { remain, msg } = checkRemainTickets(trainInfo, checkRoundTrip);
+    let { remain, msg } = checkRemainTickets(
+        trainInfo,
+        seatCategory,
+        checkRoundTrip
+    );
+    if (!remain && seatCategory !== undefined) {
+        msg = seatCategory.join('/') + ' ' + msg;
+    }
     console.log(time(), '[Info]', trainDescription, msg);
     if (remain) {
-        sendMsg(trainDescription, msg);
-    }
-    if (checkRoundTrip) {
-        sleep(5 * 1000);
+        sendMsg(trainDescription + '\n' + msg);
     }
 }
 
-function checkRemainTickets(trainInfo, checkRoundTrip) {
+function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
     let remainTypes = [];
-    Object.keys(trainInfo.tickets).forEach((type) => {
+    for (let type of Object.keys(trainInfo.tickets)) {
+        if (seatCategory !== undefined && !seatCategory.includes(type)) {
+            continue;
+        }
         if (trainInfo.tickets[type] != '' && trainInfo.tickets[type] != '无') {
             remainTypes.push(type + ' ' + trainInfo.tickets[type]);
         }
-    });
+    }
     if (remainTypes.length) {
         return {
             remain: true,
@@ -90,6 +105,7 @@ function checkRemainTickets(trainInfo, checkRoundTrip) {
             msg: '区间无票',
         };
     }
+    sleep(5 * 1000);
     let roundTripData = ChinaRailway.checkTickets(
         trainInfo.start_train_date,
         trainInfo.start_station_telecode,
@@ -103,7 +119,11 @@ function checkRemainTickets(trainInfo, checkRoundTrip) {
                 roundTripInfo.from_station_telecode &&
             trainInfo.end_station_telecode == roundTripInfo.to_station_telecode
         ) {
-            let { remain } = checkRemainTickets(roundTripInfo, false);
+            let { remain } = checkRemainTickets(
+                roundTripInfo,
+                seatCategory,
+                false
+            );
             return {
                 remain: false,
                 msg: '区间无票，全程' + (remain ? '有票' : '无票'),
@@ -130,6 +150,8 @@ function update() {
     console.log();
 }
 
-sendMsg('已启动');
-update();
+sendMsg('12306 余票监控已启动');
+console.log(time(), '[Info]', '已发送测试提醒，如未收到请检查配置');
+console.log();
 setInterval(update, config.interval * 60 * 1000);
+update();
