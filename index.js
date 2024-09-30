@@ -150,8 +150,27 @@ function update() {
     console.log();
 }
 
+function displayConfig() {
+    console.log(time(), '[Info]', '当前配置文件：');
+    console.log();
+    config.watch.forEach((search) => {
+        console.log(search.date, search.from + '→' + search.to);
+        search.trains.forEach((train) => {
+            console.log(
+                '-',
+                train.code,
+                (train.from ?? '(*)') + '→' + (train.to ?? '(*)'),
+                train.seatCategory ? train.seatCategory.join('/') : '全部席别',
+                train.checkRoundTrip ? '查询全程票' : ''
+            );
+        });
+        console.log();
+    });
+}
+
 sendMsg('12306 余票监控已启动');
 console.log(time(), '[Info]', '已发送测试提醒，如未收到请检查配置');
 console.log();
 setInterval(update, config.interval * 60 * 1000);
+displayConfig();
 update();
