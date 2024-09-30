@@ -1,9 +1,15 @@
 {
     "watch": [
         {
-            "api": "https://kyfw.12306.cn/otn/leftTicket/queryG?leftTicketDTO.train_date=2024-10-01&leftTicketDTO.from_station=AOH&leftTicketDTO.to_station=VNP&purpose_codes=ADULT",
+            "from": "上海",
+            "to": "北京",
+            "date": "2024/10/01",
             "trains": [
-                "G2|SHH|VNP|SHH|VNP"
+                {
+                    "code": "G2",
+                    "from": "上海",
+                    "to": "北京南"
+                }
             ]
         }
     ],

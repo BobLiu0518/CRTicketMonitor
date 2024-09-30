@@ -1,6 +1,6 @@
 import request from 'superagent';
 
-async function sendToWecom(body) {
+export async function sendToWecom(body) {
     body.wecomTouid = body.wecomTouid ?? '@all';
     const getTokenUrl = `https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${body.wecomCId}&corpsecret=${body.wecomSecret}`;
     const getTokenRes = await request.get(getTokenUrl);
@@ -20,5 +20,3 @@ async function sendToWecom(body) {
     });
     return sendMsgRes.body;
 }
-
-export default sendToWecom;
