@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { exit } from 'process';
 import ChinaRailway from './cr.js';
 import { sleep, time, log } from './utils.js';
 import { sendToWecom } from './wecomChan.js';
@@ -18,7 +19,7 @@ function sendMsg(msg) {
                 wecomTouid: config.notification.wecomChan.toUid,
             });
         } catch (e) {
-            log.error('发送 WeCom 提醒失败：', e);
+            log.error('WeCom 推送失败：', e);
         }
     }
 }
@@ -148,13 +149,25 @@ function update() {
     log.line();
 }
 
-function displayConfig() {
+function checkConfig() {
     log.info('当前配置文件：');
     log.line();
-    config.watch.forEach((search) => {
+    if (!config.watch || !config.watch.length) {
+        log.error('未配置搜索条件');
+        exit();
+    }
+    for (let search of config.watch) {
+        if (!search.date || !search.from || !search.to) {
+            log.error('搜索条件不完整');
+            exit();
+        }
         log.direct(search.date, search.from + '→' + search.to);
         if (search.trains.length) {
-            search.trains.forEach((train) => {
+            for (let train of search.trains) {
+                if (!train.code) {
+                    log.error('未填写车次号');
+                    exit();
+                }
                 log.direct(
                     '-',
                     train.code,
@@ -164,17 +177,34 @@ function displayConfig() {
                         : '全部席别',
                     (train.checkRoundTrip ? '[✓]' : '[×]') + '查询全程票'
                 );
-            });
+            }
         } else {
             log.direct('-', '全部车次');
         }
         log.line();
-    });
+    }
+
+    let notifications = Object.keys(config.notification);
+    if (!notifications.length) {
+        log.warn('未配置消息推送');
+    } else {
+        log.direct('配置的消息推送：' + notifications.join(' '));
+    }
+    if (!config.interval) config.interval = 15;
+    if (!config.delay) config.delay = 5;
+    log.direct(
+        '查询间隔：' +
+            config.interval +
+            '分钟，访问延迟：' +
+            config.delay +
+            '秒'
+    );
+    log.line();
 }
 
 console.clear();
 sendMsg('12306 余票监控已启动');
 log.info('已发送测试提醒，如未收到请检查配置');
 setInterval(update, config.interval * 60 * 1000);
-displayConfig();
+checkConfig();
 update();

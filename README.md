@@ -14,11 +14,11 @@
 $ npm i
 ```
 
-### 配置 Wecom
+### 配置 Wecom 推送
 
-本程序使用 [Wecom 酱](https://github.com/easychen/wecomchan) 进行消息通知，配置方法详见 [企业微信应用消息配置](https://github.com/easychen/wecomchan/blob/main/README.md#%E4%BC%81%E4%B8%9A%E5%BE%AE%E4%BF%A1%E5%BA%94%E7%94%A8%E6%B6%88%E6%81%AF%E9%85%8D%E7%BD%AE%E8%AF%B4%E6%98%8E)。
+本程序使用 [Wecom 酱](https://github.com/easychen/wecomchan) 进行消息推送，配置方法详见 [企业微信应用消息配置](https://github.com/easychen/wecomchan/blob/main/README.md#%E4%BC%81%E4%B8%9A%E5%BE%AE%E4%BF%A1%E5%BA%94%E7%94%A8%E6%B6%88%E6%81%AF%E9%85%8D%E7%BD%AE%E8%AF%B4%E6%98%8E)。
 
-当然，你也可以自行选用其他的通知方式，编辑 `index.js` 中的 `sendMsg` 函数即可。
+当然，你也可以自行选用其他的推送方式，编辑 `index.js` 中的 `sendMsg` 函数即可。
 
 ### 配置 config.json
 
