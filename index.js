@@ -1,18 +1,17 @@
 import fs from 'fs';
-import request from 'sync-request';
 import { exit } from 'process';
 import ChinaRailway from './cr.js';
 import { sleep, time, log } from './utils.js';
 import { sendToWecom } from './wecomChan.js';
 
 let config = JSON.parse(fs.readFileSync('config.json', 'UTF-8') ?? '{}');
-let { stationCode, stationName } = ChinaRailway.getStationData();
+let { stationCode, stationName } = await ChinaRailway.getStationData();
 
-function sendMsg(msg) {
+async function sendMsg(msg) {
     msg = '[CRTicketMonitor]\n' + time() + '\n' + msg;
     if (config.notification.wecomChan !== undefined) {
         try {
-            sendToWecom({
+            await sendToWecom({
                 text: msg,
                 wecomAgentId: config.notification.wecomChan.agentId,
                 wecomSecret: config.notification.wecomChan.secret,
@@ -29,7 +28,7 @@ function sendMsg(msg) {
         }
         try {
             config.notification.http.url.forEach((url) => {
-                request('GET', url + encodeURIComponent(msg)).getBody();
+                fetch(url + encodeURIComponent(msg));
             });
         } catch (e) {
             log.error('HTTP 推送失败：', e);
@@ -37,19 +36,19 @@ function sendMsg(msg) {
     }
 }
 
-function searchTickets(search) {
+async function searchTickets(search) {
     log.info('查询', search.date, search.from + '→' + search.to, '车票：');
-    let data = ChinaRailway.checkTickets(
+    let data = await ChinaRailway.checkTickets(
         search.date,
         stationCode[search.from],
         stationCode[search.to]
     );
-    data.data.result.forEach((row) => {
+    for (let row of data.data.result) {
         let trainInfo = ChinaRailway.parseTrainInfo(row);
         if (!search.trains) {
-            determineRemainTickets(trainInfo);
+            await determineRemainTickets(trainInfo);
         } else {
-            search.trains.forEach((train) => {
+            for (let train of search.trains) {
                 if (
                     train.code == trainInfo.station_train_code &&
                     (train.from === undefined ||
@@ -58,18 +57,18 @@ function searchTickets(search) {
                     (train.to === undefined ||
                         train.to == stationName[trainInfo.to_station_telecode])
                 ) {
-                    determineRemainTickets(
+                    await determineRemainTickets(
                         trainInfo,
                         train.seatCategory,
                         train.checkRoundTrip ?? false
                     );
                 }
-            });
+            }
         }
-    });
+    }
 }
 
-function determineRemainTickets(
+async function determineRemainTickets(
     trainInfo,
     seatCategory = undefined,
     checkRoundTrip = false
@@ -80,7 +79,7 @@ function determineRemainTickets(
         stationName[trainInfo.from_station_telecode] +
         '→' +
         stationName[trainInfo.to_station_telecode];
-    let { remain, msg } = checkRemainTickets(
+    let { remain, msg } = await checkRemainTickets(
         trainInfo,
         seatCategory,
         checkRoundTrip
@@ -94,7 +93,7 @@ function determineRemainTickets(
     }
 }
 
-function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
+async function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
     let remainTypes = [];
     for (let type of Object.keys(trainInfo.tickets)) {
         if (seatCategory !== undefined && !seatCategory.includes(type)) {
@@ -116,8 +115,8 @@ function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
             msg: '区间无票',
         };
     }
-    sleep(config.delay * 1000);
-    let roundTripData = ChinaRailway.checkTickets(
+    await sleep(config.delay * 1000);
+    let roundTripData = await ChinaRailway.checkTickets(
         trainInfo.start_train_date,
         trainInfo.start_station_telecode,
         trainInfo.end_station_telecode
@@ -130,7 +129,7 @@ function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
                 roundTripInfo.from_station_telecode &&
             trainInfo.end_station_telecode == roundTripInfo.to_station_telecode
         ) {
-            let { remain: roundTripRemain } = checkRemainTickets(
+            let { remain: roundTripRemain } = await checkRemainTickets(
                 roundTripInfo,
                 seatCategory,
                 false
@@ -147,18 +146,18 @@ function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
     };
 }
 
-function update() {
+async function update() {
     log.info('开始查询余票');
     try {
-        config.watch.forEach((search) => {
-            searchTickets(search);
-            sleep(config.delay * 1000);
-        });
+        for (let search of config.watch) {
+            await searchTickets(search);
+            await sleep(config.delay * 1000);
+        }
     } catch (e) {
         log.error(e);
         sendMsg('错误：' + e.message);
     }
-    log.info('余票查询结束');
+    log.info('余票查询完成');
     log.line();
 }
 
@@ -216,8 +215,8 @@ function checkConfig() {
 }
 
 console.clear();
-sendMsg('12306 余票监控已启动');
-log.info('已发送测试提醒，如未收到请检查配置');
 setInterval(update, config.interval * 60 * 1000);
 checkConfig();
+await sendMsg('12306 余票监控已启动');
+log.info('已发送测试提醒，如未收到请检查配置');
 update();

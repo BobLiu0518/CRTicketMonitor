@@ -5,8 +5,12 @@ export function time() {
     return moment().format('YYYY/MM/DD HH:mm:ss');
 }
 
-export function sleep(n) {
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, n);
+export async function sleep(n) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve();
+        }, n);
+    });
 }
 
 export let log = {

@@ -1,13 +1,11 @@
-import request from 'sync-request';
 import moment from 'moment';
 
 class ChinaRailway {
-    static getStationData() {
-        let stationList = request(
-            'GET',
+    static async getStationData() {
+        let response = await fetch(
             'https://kyfw.12306.cn/otn/resources/js/framework/station_name.js'
-        )
-            .getBody('UTF-8')
+        );
+        let stationList = (await response.text())
             .match(/(?<=').+(?=')/)[0]
             .split('@')
             .slice(1);
@@ -19,6 +17,27 @@ class ChinaRailway {
             stationName[details[2]] = details[1];
         });
         return { stationCode, stationName };
+    }
+
+    static async checkTickets(date, from, to) {
+        let api =
+            'https://kyfw.12306.cn/otn/leftTicket/queryG?leftTicketDTO.train_date=' +
+            moment(date, 'YYYYMMDD').format('YYYY-MM-DD') +
+            '&leftTicketDTO.from_station=' +
+            from +
+            '&leftTicketDTO.to_station=' +
+            to +
+            '&purpose_codes=ADULT';
+        let res = await fetch(api, {
+            headers: {
+                Cookie: 'JSESSIONID=',
+            },
+        });
+        let data = await res.json();
+        if (!data || !data.status) {
+            throw new Error('获取余票数据失败');
+        }
+        return data;
     }
 
     static parseTrainInfo(str) {
@@ -90,27 +109,6 @@ class ChinaRailway {
             商务座: data.swz_num,
             SRRB: data.srrb_num /* ? */,
         };
-        return data;
-    }
-
-    static checkTickets(date, from, to) {
-        let api =
-            'https://kyfw.12306.cn/otn/leftTicket/queryG?leftTicketDTO.train_date=' +
-            moment(date, 'YYYYMMDD').format('YYYY-MM-DD') +
-            '&leftTicketDTO.from_station=' +
-            from +
-            '&leftTicketDTO.to_station=' +
-            to +
-            '&purpose_codes=ADULT';
-        let res = request('GET', api, {
-            headers: {
-                Cookie: 'JSESSIONID=',
-            },
-        });
-        let data = JSON.parse(res.getBody('UTF-8'));
-        if (!data || !data.status) {
-            throw res;
-        }
         return data;
     }
 }
