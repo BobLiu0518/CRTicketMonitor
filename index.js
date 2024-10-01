@@ -11,7 +11,11 @@ let notifications = [];
 async function sendMsg(msg) {
     msg = '[CRTicketMonitor]\n' + time() + '\n' + msg;
     for (let notification of notifications) {
-        notification.send(msg);
+        notification.send(msg).catch((err) => {
+            log.error(
+                `${notification.info.name} (${notification.info.description}) 发送失败：${err}`
+            );
+        });
     }
 }
 
