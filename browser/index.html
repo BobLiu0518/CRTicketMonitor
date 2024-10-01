@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>CRTicketMonitor</title>
+        <title>CRTM</title>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
@@ -62,6 +62,10 @@
                 return notice.title + ' ' + notice.time + ' ' + notice.content;
             }
 
+            function setTitleSuffix(suffix) {
+                document.title = `CRTM (${suffix})`;
+            }
+
             async function checkNotificationPermission() {
                 if (!('Notification' in window)) {
                     log('[浏览器推送] 错误：当前浏览器不支持发送通知');
@@ -77,14 +81,14 @@
             }
 
             function connectWebSocket(retry = 0) {
-                let port = location.search.search(/\?port=(\d+)/)[1] ?? 9536;
-                ws = new WebSocket(`ws://${location.hostname}:${port}`);
+                ws = new WebSocket(`ws://${location.host}`);
 
                 ws.onopen = () => {
                     if (retry) {
                         clearLog();
                     }
                     log('[浏览器推送] CRTM 连接成功！');
+                    setTitleSuffix('已连接');
                 };
 
                 ws.onmessage = (event) => {
@@ -111,6 +115,7 @@
                     log(
                         `[浏览器推送] CRTM 连接失败或已断开：[${event.code}] ${reason}`
                     );
+                    setTitleSuffix('离线');
                     if (retry < 3) {
                         setTimeout(connectWebSocket, 10000, retry + 1);
                         log('[浏览器推送] 将在 10 秒后重新连接');
@@ -121,6 +126,7 @@
             }
 
             try {
+                setTitleSuffix('初始化');
                 connectWebSocket();
                 checkNotificationPermission();
             } catch (e) {

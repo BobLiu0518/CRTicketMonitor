@@ -16,8 +16,7 @@
     "notifications": [
         {
             "type": "Browser",
-            "port": 12306,
-            "wsPort": 9536
+            "port": 12306
         },
         {
             "type": "WecomChan",

@@ -2,7 +2,7 @@ import fs from 'fs';
 import open from 'open';
 import moment from 'moment';
 import { createServer } from 'http';
-import { WebSocketServer } from 'ws';
+import WebSocket, { WebSocketServer } from 'ws';
 import { log, time } from './utils.js';
 
 class NotificationBase {
@@ -130,7 +130,7 @@ class BrowserNotification extends NotificationBase {
             name: '浏览器推送',
             description: `127.0.0.1:${config.port}`,
         });
-        if (!config.port || !config.wsPort) {
+        if (!config.port) {
             throw new Error(`${this.info.name} 配置不完整`);
         }
         if (!config.host) {
@@ -148,9 +148,8 @@ class BrowserNotification extends NotificationBase {
                 res.writeHead(404).end('404 Not Found');
             }
         });
-        this.httpServer.listen(config.port, config.host);
 
-        this.wsServer = new WebSocketServer({ port: config.wsPort });
+        this.wsServer = new WebSocketServer({ server: this.httpServer });
         this.wsServer.on('connection', (ws) => {
             log.info(`${this.info.name} (${this.info.description}) 成功连接`);
             ws.on('error', (e) => {
@@ -179,8 +178,10 @@ class BrowserNotification extends NotificationBase {
             );
         });
 
+        this.httpServer.listen(config.port, config.host);
+
         setTimeout(() => {
-            let url = `http://127.0.0.1:${config.port}/?port=${config.wsPort}`;
+            let url = `http://127.0.0.1:${config.port}/`;
             log.info(`${this.info.name}：请用浏览器打开 ${url}`);
             open(url);
         }, 500);
