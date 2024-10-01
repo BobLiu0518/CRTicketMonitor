@@ -15,6 +15,11 @@
     ],
     "notifications": [
         {
+            "type": "Browser",
+            "port": 12306,
+            "wsPort": 9536
+        },
+        {
             "type": "WecomChan",
             "agentId": "",
             "secret": "",

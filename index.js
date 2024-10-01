@@ -9,13 +9,18 @@ let { stationCode, stationName } = await ChinaRailway.getStationData();
 let notifications = [];
 
 async function sendMsg(msg) {
-    msg = '[CRTicketMonitor]\n' + time() + '\n' + msg;
     for (let notification of notifications) {
-        notification.send(msg).catch((err) => {
-            log.error(
-                `${notification.info.name} (${notification.info.description}) 发送失败：${err}`
-            );
-        });
+        notification
+            .send({
+                title: '[CRTicketMonitor]',
+                time: time(),
+                content: msg,
+            })
+            .catch((err) => {
+                log.error(
+                    `${notification.info.name} (${notification.info.description}) 发送失败：${err}`
+                );
+            });
     }
 }
 
@@ -157,7 +162,7 @@ function checkConfig() {
             exit();
         }
         log.direct(search.date, search.from + '→' + search.to);
-        if (search.trains.length) {
+        if (search.trains && search.trains.length) {
             for (let train of search.trains) {
                 if (!train.code) {
                     log.error('未填写车次号');
@@ -180,9 +185,15 @@ function checkConfig() {
     }
 
     for (let notification of config.notifications) {
-        let n = new Notifications[notification.type](notification);
-        notifications.push(n);
-        log.direct(`已配置消息推送：${n.info.name} (${n.info.description})`);
+        try {
+            let n = new Notifications[notification.type](notification);
+            notifications.push(n);
+            log.direct(
+                `已配置消息推送：${n.info.name} (${n.info.description})`
+            );
+        } catch (e) {
+            log.error('配置消息推送时发生错误：', e);
+        }
     }
     if (!notifications.length) {
         log.warn('未配置消息推送');

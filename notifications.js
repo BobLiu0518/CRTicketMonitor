@@ -1,4 +1,9 @@
+import fs from 'fs';
+import open from 'open';
 import moment from 'moment';
+import { createServer } from 'http';
+import { WebSocketServer } from 'ws';
+import { log, time } from './utils.js';
 
 class NotificationBase {
     static info = {
@@ -55,6 +60,8 @@ class WecomChanNotification extends NotificationBase {
     }
 
     async send(msg) {
+        msg = msg.title + '\n' + msg.time + '\n' + msg.content;
+
         if (
             !this.accessToken.token ||
             this.getTimestamp() > this.accessToken.expire
@@ -102,6 +109,7 @@ class HTTPNotification extends NotificationBase {
     }
 
     async send(msg) {
+        msg = msg.title + '\n' + msg.time + '\n' + msg.content;
         let response = await fetch(this.config.url + encodeURIComponent(msg));
         if (!response.ok) {
             throw new Error(
@@ -112,7 +120,89 @@ class HTTPNotification extends NotificationBase {
     }
 }
 
+class BrowserNotification extends NotificationBase {
+    wsServer = null;
+    httpServer = null;
+    history = [];
+
+    constructor(config) {
+        super(config, {
+            name: '浏览器推送',
+            description: `127.0.0.1:${config.port}`,
+        });
+        if (!config.port || !config.wsPort) {
+            throw new Error(`${this.info.name} 配置不完整`);
+        }
+        if (!config.host) {
+            config.host = '127.0.0.1';
+        }
+
+        this.httpServer = createServer((req, res) => {
+            if (req.url.match(/^\/(\?port=\d+)?$/)) {
+                res.writeHead(200, { 'Content-Type': 'text/html' });
+                res.end(fs.readFileSync('browser/index.html'));
+            } else if (req.url == '/cr.svg') {
+                res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
+                res.end(fs.readFileSync('browser/cr.svg'));
+            } else {
+                res.writeHead(404).end('404 Not Found');
+            }
+        });
+        this.httpServer.listen(config.port, config.host);
+
+        this.wsServer = new WebSocketServer({ port: config.wsPort });
+        this.wsServer.on('connection', (ws) => {
+            log.info(`${this.info.name} (${this.info.description}) 成功连接`);
+            ws.on('error', (e) => {
+                log.error(`${this.info.name} WebSocket 错误：${e}`);
+            });
+            ws.on('close', () => {
+                log[this.wsServer.clients.size ? 'info' : 'warn'](
+                    `${this.info.name} (${this.info.description}) 连接已断开`
+                );
+            });
+            ws.send(
+                JSON.stringify({
+                    type: 'history',
+                    content: this.history,
+                })
+            );
+            ws.send(
+                JSON.stringify({
+                    type: 'notice',
+                    content: {
+                        title: '[CRTicketMonitor]',
+                        time: time(),
+                        content: '浏览器推送连接成功',
+                    },
+                })
+            );
+        });
+
+        setTimeout(() => {
+            let url = `http://127.0.0.1:${config.port}/?port=${config.wsPort}`;
+            log.info(`${this.info.name}：请用浏览器打开 ${url}`);
+            open(url);
+        }, 500);
+    }
+
+    async send(msg) {
+        for (let ws of this.wsServer.clients) {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(
+                    JSON.stringify({
+                        type: 'notice',
+                        content: msg,
+                    })
+                );
+            }
+        }
+        this.history.push(msg);
+    }
+}
+
 export default {
     WecomChan: WecomChanNotification,
     HTTP: HTTPNotification,
+    Browser: BrowserNotification,
 };

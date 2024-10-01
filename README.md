@@ -49,6 +49,16 @@ $ npm i
     // 推送配置（详见下文）
     "notifications": [
         {
+            // 浏览器推送
+            "type": "Browser",
+            // 监听地址（选填）
+            "host": "127.0.0.1",
+            // HTTP 端口
+            "port": 12306,
+            // WebSocket 端口
+            "wsPort": 9536
+        },
+        {
             // Wecom 酱推送
             "type": "WecomChan",
             // 应用 ID
@@ -81,6 +91,16 @@ $ npm i
 
 同一种类的配置项可以设置多个。
 
+### 浏览器通知
+
+门槛最低的推送方式，只需保持浏览器后台运行即可。
+
+无需额外配置，直接运行即可。如果运行时提示某个端口 `Permission denied`，需修改 `config.json` 中的对应端口号后重试。端口号可以选择 1024~65535 之间的数。<s>当然，你愿意的话 0~1023 也可以</s>
+
+运行后，用浏览器打开提示的网址，允许浏览器进行通知即可。
+
+安全起见，配置项中的监听地址 `host` 建议填写本机（即 `127.0.0.1`）。如果有其他设备连接，则需改为 `0.0.0.0`。
+
 ### Wecom 酱推送
 
 使用 [Wecom 酱](https://github.com/easychen/wecomchan)，可以直接将通知推送至微信。
@@ -98,12 +118,6 @@ $ npm i
 OneBot：`http://127.0.0.1:5700/send_private_msg?user_id=××××&message=`
 
 Server 酱 Turbo：`https://sctapi.ftqq.com/××××.send?title=CRTicketMontor通知&desp=`
-
-### 浏览器通知
-
-门槛最低的一种推送方式，只需要保持浏览器后台运行即可。
-
-最大的问题在于这个功能<s>我还没做</s>。
 
 ### 其他
 

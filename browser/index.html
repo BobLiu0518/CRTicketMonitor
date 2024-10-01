@@ -1,0 +1,131 @@
+<html>
+    <head>
+        <title>CRTicketMonitor</title>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <h3>CR Ticket Monitor</h3>
+        <p id="log"></p>
+        <script>
+            let logArea = document.getElementById('log');
+            let ws = null;
+
+            let specificStatusCodeMappings = {
+                1000: 'Normal Closure',
+                1001: 'Going Away',
+                1002: 'Protocol Error',
+                1003: 'Unsupported Data',
+                1004: '(For future)',
+                1005: 'No Status Received',
+                1006: 'Abnormal Closure',
+                1007: 'Invalid frame payload data',
+                1008: 'Policy Violation',
+                1009: 'Message too big',
+                1010: 'Missing Extension',
+                1011: 'Internal Error',
+                1012: 'Service Restart',
+                1013: 'Try Again Later',
+                1014: 'Bad Gateway',
+                1015: 'TLS Handshake',
+            };
+
+            function getStatusCodeString(code) {
+                if (code >= 0 && code <= 999) {
+                    return '(Unused)';
+                } else if (code >= 1016) {
+                    if (code <= 1999) {
+                        return '(For WebSocket standard)';
+                    } else if (code <= 2999) {
+                        return '(For WebSocket extensions)';
+                    } else if (code <= 3999) {
+                        return '(For libraries and frameworks)';
+                    } else if (code <= 4999) {
+                        return '(For applications)';
+                    }
+                }
+                if (typeof specificStatusCodeMappings[code] !== 'undefined') {
+                    return specificStatusCodeMappings[code];
+                }
+                return '(Unknown)';
+            }
+
+            function log(str) {
+                logArea.innerHTML = str + '<br />' + logArea.innerHTML;
+            }
+
+            function clearLog() {
+                logArea.innerHTML = '';
+            }
+
+            function parseNotice(notice) {
+                return notice.title + ' ' + notice.time + ' ' + notice.content;
+            }
+
+            async function checkNotificationPermission() {
+                if (!('Notification' in window)) {
+                    log('[浏览器推送] 错误：当前浏览器不支持发送通知');
+                    return false;
+                } else if (Notification.permission != 'granted') {
+                    await Notification.requestPermission();
+                    if (Notification.permission != 'granted') {
+                        log('[浏览器推送] 错误：通知权限被拒绝');
+                        return false;
+                    }
+                    return true;
+                }
+            }
+
+            function connectWebSocket(retry = 0) {
+                let port = location.search.search(/\?port=(\d+)/)[1] ?? 9536;
+                ws = new WebSocket(`ws://${location.hostname}:${port}`);
+
+                ws.onopen = () => {
+                    if (retry) {
+                        clearLog();
+                    }
+                    log('[浏览器推送] CRTM 连接成功！');
+                };
+
+                ws.onmessage = (event) => {
+                    let data = JSON.parse(event.data);
+                    if (data.type == 'history') {
+                        for (let msg of data.content) {
+                            log(parseNotice(msg));
+                        }
+                    } else if (data.type == 'notice') {
+                        let msg = data.content;
+                        new Notification('CR Ticket Monitor', {
+                            body: msg.content,
+                            icon: 'cr.svg',
+                            requireInteraction: true,
+                            vibrate: true,
+                        });
+                        log(parseNotice(msg));
+                    }
+                };
+
+                ws.onclose = (event) => {
+                    let reason =
+                        event.reason || getStatusCodeString(event.code);
+                    log(
+                        `[浏览器推送] CRTM 连接失败或已断开：[${event.code}] ${reason}`
+                    );
+                    if (retry < 3) {
+                        setTimeout(connectWebSocket, 10000, retry + 1);
+                        log('[浏览器推送] 将在 10 秒后重新连接');
+                    } else {
+                        log('[浏览器推送] 重试次数过多，请尝试重启程序');
+                    }
+                };
+            }
+
+            try {
+                connectWebSocket();
+                checkNotificationPermission();
+            } catch (e) {
+                log(e);
+            }
+        </script>
+    </body>
+</html>
