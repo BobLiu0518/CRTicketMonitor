@@ -148,6 +148,9 @@ class BrowserNotification extends NotificationBase {
                 res.writeHead(404).end('404 Not Found');
             }
         });
+        this.httpServer.on('error', (err) => {
+            log.error('HTTP 服务器错误：', err);
+        });
 
         this.wsServer = new WebSocketServer({ server: this.httpServer });
         this.wsServer.on('connection', (ws) => {
@@ -176,6 +179,9 @@ class BrowserNotification extends NotificationBase {
                     },
                 })
             );
+        });
+        this.wsServer.on('error', (err) => {
+            log.error('WebSocket 服务器错误：', err);
         });
 
         this.httpServer.listen(config.port, config.host);
