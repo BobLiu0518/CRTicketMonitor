@@ -83,17 +83,24 @@ async function determineRemainTickets(
 
 async function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
     let remainTypes = [];
+    let remainTotal = 0;
     for (let type of Object.keys(trainInfo.tickets)) {
         if (seatCategory !== undefined && !seatCategory.includes(type)) {
             continue;
         }
         if (trainInfo.tickets[type] != '' && trainInfo.tickets[type] != '无') {
             remainTypes.push(type + ' ' + trainInfo.tickets[type]);
+            if (trainInfo.tickets[type] == '有') {
+                remainTotal += Infinity;
+            } else {
+                remainTotal += parseInt(trainInfo.tickets[type]);
+            }
         }
     }
     if (remainTypes.length) {
         return {
             remain: true,
+            total: remainTotal >= 20 ? '≥20' : remainTotal,
             msg: remainTypes.join(' / '),
         };
     }
@@ -117,14 +124,15 @@ async function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
                 roundTripInfo.from_station_telecode &&
             trainInfo.end_station_telecode == roundTripInfo.to_station_telecode
         ) {
-            let { remain: roundTripRemain } = await checkRemainTickets(
-                roundTripInfo,
-                seatCategory,
-                false
-            );
+            let { remain: roundTripRemain, total: roundTripRemainTotal } =
+                await checkRemainTickets(roundTripInfo, seatCategory, false);
             return {
                 remain: false,
-                msg: `区间无票，全程${roundTripRemain ? '有' : '无'}票`,
+                msg: `区间无票，全程${
+                    roundTripRemain
+                        ? `有票 (${roundTripRemainTotal}张)`
+                        : '无票'
+                }`,
             };
         }
     }
