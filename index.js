@@ -110,11 +110,11 @@ async function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
             msg: '区间无票',
         };
     }
-    await sleep(config.delay * 1000);
     let roundTripData = await ChinaRailway.checkTickets(
         trainInfo.start_train_date,
         trainInfo.start_station_telecode,
-        trainInfo.end_station_telecode
+        trainInfo.end_station_telecode,
+        sleep(config.delay * 1000)
     );
     for (let row of roundTripData.data.result) {
         let roundTripInfo = ChinaRailway.parseTrainInfo(row);
@@ -149,6 +149,7 @@ async function update() {
             await searchTickets(search);
             await sleep(config.delay * 1000);
         }
+        ChinaRailway.clearTicketCache();
     } catch (e) {
         log.error(e);
         sendMsg('错误：' + e.message);

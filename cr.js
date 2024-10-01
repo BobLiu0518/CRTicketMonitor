@@ -1,6 +1,12 @@
 import moment from 'moment';
 
 class ChinaRailway {
+    static ticketCache = [];
+
+    static clearTicketCache() {
+        this.ticketCache = [];
+    }
+
     static async getStationData() {
         let response = await fetch(
             'https://kyfw.12306.cn/otn/resources/js/framework/station_name.js'
@@ -19,7 +25,14 @@ class ChinaRailway {
         return { stationCode, stationName };
     }
 
-    static async checkTickets(date, from, to) {
+    static async checkTickets(date, from, to, delay) {
+        if (this.ticketCache[date + from + to]) {
+            return this.ticketCache[date + from + to];
+        }
+
+        if (delay) {
+            await delay;
+        }
         let api =
             'https://kyfw.12306.cn/otn/leftTicket/queryG?leftTicketDTO.train_date=' +
             moment(date, 'YYYYMMDD').format('YYYY-MM-DD') +
@@ -37,6 +50,8 @@ class ChinaRailway {
         if (!data || !data.status) {
             throw new Error('获取余票数据失败');
         }
+
+        this.ticketCache[date + from + to] = data;
         return data;
     }
 
