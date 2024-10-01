@@ -16,7 +16,7 @@ async function sendMsg(msg) {
 }
 
 async function searchTickets(search) {
-    log.info('查询', search.date, search.from + '→' + search.to, '车票：');
+    log.info(`查询 ${search.date} ${search.from}→${search.to} 车票：`);
     let data = await ChinaRailway.checkTickets(
         search.date,
         stationCode[search.from],
@@ -115,7 +115,7 @@ async function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
             );
             return {
                 remain: false,
-                msg: '区间无票，全程' + (roundTripRemain ? '有票' : '无票'),
+                msg: `区间无票，全程${roundTripRemain ? '有' : '无'}票`,
             };
         }
     }
@@ -187,13 +187,7 @@ function checkConfig() {
 
     if (!config.interval) config.interval = 15;
     if (!config.delay) config.delay = 5;
-    log.direct(
-        '查询间隔：' +
-            config.interval +
-            '分钟，访问延迟：' +
-            config.delay +
-            '秒'
-    );
+    log.direct(`查询间隔：${config.interval}分钟，访问延迟：${config.delay}秒`);
     log.line();
 }
 
