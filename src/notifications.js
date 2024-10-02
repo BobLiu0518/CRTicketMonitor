@@ -18,6 +18,8 @@ class NotificationBase {
     async send(msg) {
         console.log(msg);
     }
+
+    die() {}
 }
 
 class WecomChanNotification extends NotificationBase {
@@ -206,6 +208,21 @@ class BrowserNotification extends NotificationBase {
             }
         }
         this.history.push(msg);
+    }
+
+    die() {
+        for (let ws of this.wsServer.clients) {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(
+                    JSON.stringify({
+                        type: 'die',
+                    }),
+                    () => {
+                        ws.terminate();
+                    }
+                );
+            }
+        }
     }
 }
 

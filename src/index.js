@@ -255,6 +255,9 @@ process.title = 'CR Ticket Monitor';
 process.on('uncaughtException', die);
 process.on('unhandledRejection', die);
 process.on('exit', () => {
+    for (let notification of notifications) {
+        notification.die();
+    }
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5000);
 });
 
