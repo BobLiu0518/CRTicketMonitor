@@ -4,7 +4,6 @@ import Notifications from './notifications.js';
 import { sleep, time, log } from './utils.js';
 
 let config;
-let { stationCode, stationName } = await ChinaRailway.getStationData();
 let notifications = [];
 
 function die(err) {
@@ -36,8 +35,8 @@ async function searchTickets(search) {
     log.info(`查询 ${search.date} ${search.from}→${search.to} 车票：`);
     let data = await ChinaRailway.checkTickets(
         search.date,
-        stationCode[search.from],
-        stationCode[search.to]
+        await ChinaRailway.getStationCode(search.from),
+        await ChinaRailway.getStationCode(search.to)
     );
     for (let row of data.data.result) {
         let trainInfo = ChinaRailway.parseTrainInfo(row);
@@ -49,9 +48,14 @@ async function searchTickets(search) {
                     train.code == trainInfo.station_train_code &&
                     (train.from === undefined ||
                         train.from ==
-                            stationName[trainInfo.from_station_telecode]) &&
+                            ChinaRailway.stationName[
+                                trainInfo.from_station_telecode
+                            ]) &&
                     (train.to === undefined ||
-                        train.to == stationName[trainInfo.to_station_telecode])
+                        train.to ==
+                            ChinaRailway.stationName[
+                                trainInfo.to_station_telecode
+                            ])
                 ) {
                     await determineRemainTickets(
                         trainInfo,
@@ -72,9 +76,9 @@ async function determineRemainTickets(
     let trainDescription =
         trainInfo.station_train_code +
         ' ' +
-        stationName[trainInfo.from_station_telecode] +
+        (await ChinaRailway.getStationName(trainInfo.from_station_telecode)) +
         '→' +
-        stationName[trainInfo.to_station_telecode];
+        (await ChinaRailway.getStationName(trainInfo.to_station_telecode));
     let { remain, msg } = await checkRemainTickets(
         trainInfo,
         seatCategory,

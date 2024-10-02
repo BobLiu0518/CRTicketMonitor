@@ -2,6 +2,22 @@ import moment from 'moment';
 
 class ChinaRailway {
     static ticketCache = [];
+    static stationName;
+    static stationCode;
+
+    static async getStationName(code) {
+        if (!this.stationName) {
+            await this.getStationData();
+        }
+        return this.stationName[code];
+    }
+
+    static async getStationCode(name) {
+        if (!this.stationCode) {
+            await this.getStationData();
+        }
+        return this.stationCode[name];
+    }
 
     static clearTicketCache() {
         this.ticketCache = [];
@@ -15,14 +31,14 @@ class ChinaRailway {
             .match(/(?<=').+(?=')/)[0]
             .split('@')
             .slice(1);
-        let stationCode = {},
-            stationName = {};
+
+        this.stationCode = {};
+        this.stationName = {};
         stationList.forEach((station) => {
             let details = station.split('|');
-            stationCode[details[1]] = details[2];
-            stationName[details[2]] = details[1];
+            this.stationCode[details[1]] = details[2];
+            this.stationName[details[2]] = details[1];
         });
-        return { stationCode, stationName };
     }
 
     static async checkTickets(date, from, to, delay) {
