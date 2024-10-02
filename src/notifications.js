@@ -223,6 +223,7 @@ class BrowserNotification extends NotificationBase {
                 );
             }
         }
+        this.httpServer.close();
     }
 }
 

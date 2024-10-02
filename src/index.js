@@ -7,12 +7,19 @@ let config;
 let notifications = [];
 
 function die(err) {
-    if (err) {
+    if (err && err != 'SIGINT') {
         log.error('发生错误：', err);
     }
     log.line();
     log.info('程序已结束，将在 5 秒后退出');
     process.exit();
+}
+
+function clean() {
+    for (let notification of notifications) {
+        notification.die();
+    }
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5000);
 }
 
 async function sendMsg(msg) {
@@ -254,12 +261,8 @@ function checkConfig() {
 process.title = 'CR Ticket Monitor';
 process.on('uncaughtException', die);
 process.on('unhandledRejection', die);
-process.on('exit', () => {
-    for (let notification of notifications) {
-        notification.die();
-    }
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5000);
-});
+process.on('SIGINT', die);
+process.on('exit', clean);
 
 console.clear();
 log.title(String.raw`
