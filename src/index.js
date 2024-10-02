@@ -1,4 +1,5 @@
 import fs from 'fs';
+import moment from 'moment';
 import ChinaRailway from './cr.js';
 import Notifications from './notifications.js';
 import { sleep, time, log } from './utils.js';
@@ -186,7 +187,18 @@ function checkConfig() {
             try {
                 fs.writeFileSync(
                     'config.json',
-                    JSON.stringify({ watch: [], notifications: [] })
+                    JSON.stringify({
+                        watch: [
+                            {
+                                from: '上海',
+                                to: '北京',
+                                date: moment().add(1, 'day').format('YYYYMMDD'),
+                            },
+                        ],
+                        notifications: [{ type: 'Browser', port: 12306 }],
+                        interval: 15,
+                        delay: 5,
+                    })
                 );
                 log.info('已自动创建 config.json');
                 log.info('请根据需要修改后重启程序');
@@ -295,4 +307,4 @@ log.line();
 
 checkConfig();
 setInterval(update, config.interval * 60 * 1000);
-update();
+setTimeout(update, 5 * 1000);
