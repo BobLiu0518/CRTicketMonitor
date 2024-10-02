@@ -10,6 +10,7 @@
         <script>
             let logArea = document.getElementById('log');
             let ws = null;
+            let dead = false;
 
             let specificStatusCodeMappings = {
                 1000: 'Normal Closure',
@@ -106,21 +107,28 @@
                             vibrate: true,
                         });
                         log(parseNotice(msg));
+                    } else if (data.type == 'die') {
+                        dead = true;
                     }
                 };
 
                 ws.onclose = (event) => {
-                    let reason =
-                        event.reason || getStatusCodeString(event.code);
-                    log(
-                        `[浏览器推送] CRTM 连接失败或已断开：[${event.code}] ${reason}`
-                    );
-                    setTitleSuffix('离线');
-                    if (retry < 3) {
-                        setTimeout(connectWebSocket, 10000, retry + 1);
-                        log('[浏览器推送] 将在 10 秒后重新连接');
+                    if (dead) {
+                        log('[CRTM] 程序已停止');
+                        setTitleSuffix('停止运行');
                     } else {
-                        log('[浏览器推送] 重试次数过多，请尝试重启程序');
+                        let reason =
+                            event.reason || getStatusCodeString(event.code);
+                        log(
+                            `[浏览器推送] CRTM 连接失败或已断开：[${event.code}] ${reason}`
+                        );
+                        setTitleSuffix('离线');
+                        if (retry < 3) {
+                            setTimeout(connectWebSocket, 10000, retry + 1);
+                            log('[浏览器推送] 将在 10 秒后重新连接');
+                        } else {
+                            log('[浏览器推送] 重试次数过多，请尝试重启程序');
+                        }
                     }
                 };
             }
