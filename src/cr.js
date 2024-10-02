@@ -42,6 +42,12 @@ class ChinaRailway {
     }
 
     static async checkTickets(date, from, to, delay) {
+        if (
+            moment().isAfter(moment(date, 'YYYYMMDD')) ||
+            moment().add(15, 'days').isBefore(moment(date, 'YYYYMMDD'))
+        ) {
+            throw new Error('日期需为0~15天内');
+        }
         if (this.ticketCache[date + from + to]) {
             return this.ticketCache[date + from + to];
         }
