@@ -12,7 +12,7 @@
 
 在 [GitHub Release](https://github.com/BobLiu0518/CRTicketMonitor/releases) 页面下载本程序的二进制文件。
 
-二进制文件使用 [Node.js SEA](https://nodejs.org/api/single-executable-applications.html) 打包，目前仅有 Windows x86_64 版本提供。
+二进制文件使用 [Node.js SEA](https://nodejs.org/api/single-executable-applications.html) 打包，目前仅有 Windows x86_64 和 arm64 版本提供。
 
 ### 2. 运行
 
