@@ -1,5 +1,4 @@
 import fs from 'fs';
-import open from 'open';
 import moment from 'moment';
 import { createServer } from 'http';
 import WebSocket, { WebSocketServer } from 'ws';
@@ -184,13 +183,15 @@ class BrowserNotification extends NotificationBase {
             log.error('WebSocket 服务器错误：', err);
         });
 
-        this.httpServer.listen(config.port, config.host);
-
-        setTimeout(() => {
-            let url = `http://127.0.0.1:${config.port}/`;
+        let url = `http://127.0.0.1:${config.port}/`;
+        this.httpServer.on('listening', async () => {
             log.info(`${this.info.name}：请用浏览器打开 ${url}`);
-            open(url);
-        }, 500);
+            try {
+                const { default: open } = await import('open');
+                open(url);
+            } catch (err) {}
+        });
+        this.httpServer.listen(config.port, config.host);
     }
 
     async send(msg) {
