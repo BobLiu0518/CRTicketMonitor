@@ -1,5 +1,10 @@
 {
     "main": "dist/bundle.cjs",
     "output": "dist/sea-prep.blob",
-    "disableExperimentalSEAWarning": true
+    "disableExperimentalSEAWarning": true,
+    "assets": {
+        "config.example.json": "config.example.json",
+        "browser/cr.svg": "browser/cr.svg",
+        "browser/index.html": "browser/index.html"
+    }
 }

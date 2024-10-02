@@ -1,5 +1,7 @@
+import fs from 'fs';
 import moment from 'moment';
 import chalk from 'chalk';
+import { isSea, getAsset } from 'node:sea';
 
 export function time() {
     return moment().format('YYYY/MM/DD HH:mm:ss');
@@ -36,3 +38,11 @@ export let log = {
         console.log();
     },
 };
+
+export function asset(name) {
+    if (isSea()) {
+        return getAsset(name, 'UTF-8');
+    } else {
+        return fs.readFileSync(name);
+    }
+}

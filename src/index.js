@@ -2,7 +2,7 @@ import fs from 'fs';
 import moment from 'moment';
 import ChinaRailway from './cr.js';
 import Notifications from './notifications.js';
-import { sleep, time, log } from './utils.js';
+import { sleep, time, log, asset } from './utils.js';
 
 let config;
 let notifications = [];
@@ -185,21 +185,7 @@ function checkConfig() {
         if (err.code == 'ENOENT') {
             log.error('config.json 不存在');
             try {
-                fs.writeFileSync(
-                    'config.json',
-                    JSON.stringify({
-                        watch: [
-                            {
-                                from: '上海',
-                                to: '北京',
-                                date: moment().add(1, 'day').format('YYYYMMDD'),
-                            },
-                        ],
-                        notifications: [{ type: 'Browser', port: 12306 }],
-                        interval: 15,
-                        delay: 5,
-                    })
-                );
+                fs.writeFileSync('config.json', asset('config.example.json'));
                 log.info('已自动创建 config.json');
                 log.info('请根据需要修改后重启程序');
             } catch (err) {
@@ -306,5 +292,6 @@ log.title('https://github.com/BobLiu0518/CRTicketMonitor');
 log.line();
 
 checkConfig();
+log.info('5秒后开始首次查询，按 Ctrl+C 中止');
 setInterval(update, config.interval * 60 * 1000);
 setTimeout(update, 5 * 1000);

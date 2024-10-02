@@ -2,7 +2,7 @@ import fs from 'fs';
 import moment from 'moment';
 import { createServer } from 'http';
 import WebSocket, { WebSocketServer } from 'ws';
-import { log, time } from './utils.js';
+import { log, time, asset } from './utils.js';
 
 class NotificationBase {
     static info = {
@@ -141,10 +141,10 @@ class BrowserNotification extends NotificationBase {
         this.httpServer = createServer((req, res) => {
             if (req.url.match(/^\/(\?port=\d+)?$/)) {
                 res.writeHead(200, { 'Content-Type': 'text/html' });
-                res.end(fs.readFileSync('browser/index.html'));
+                res.end(asset('browser/index.html'));
             } else if (req.url == '/cr.svg') {
                 res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
-                res.end(fs.readFileSync('browser/cr.svg'));
+                res.end(asset('browser/cr.svg'));
             } else {
                 res.writeHead(404).end('404 Not Found');
             }
