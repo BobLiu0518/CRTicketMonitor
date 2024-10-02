@@ -8,7 +8,9 @@
                 {
                     "code": "G2",
                     "from": "上海",
-                    "to": "北京南"
+                    "to": "北京南",
+                    "seatCategory": ["二等座"],
+                    "checkRoundTrip": false
                 }
             ]
         }
@@ -17,17 +19,6 @@
         {
             "type": "Browser",
             "port": 12306
-        },
-        {
-            "type": "WecomChan",
-            "agentId": "",
-            "secret": "",
-            "companyId": "",
-            "toUid": "@all"
-        },
-        {
-            "type": "HTTP",
-            "url": ""
         }
     ],
     "interval": 15,

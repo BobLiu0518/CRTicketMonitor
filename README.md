@@ -16,7 +16,9 @@
 
 ### 2. 运行
 
-将 `config.json` 放置于可执行程序相同目录下后，直接运行即可。
+将 [配置](#配置) 好的 `config.json` 放置于可执行程序相同目录下后，直接运行即可。
+
+或者，运行一次程序后，修改生成的 `config.json`。
 
 ## 手动部署
 
@@ -40,13 +42,15 @@ $ npm i
 
 ### 4. 运行
 
-本项目针对 `Linux` 服务器进行开发，安装 `screen` 后，运行 `./run.sh` 即可启动。
+本项目针对 Linux 服务器进行开发，安装 `screen` 后，运行 `./run.sh` 即可启动。
 
 如果使用其他系统，可以在命令行中输入 `npm start` 运行。
 
-## 配置 config.json
+## 配置
 
-在配置前，先将仓库中的 `config.example.json` 重命名为 `config.json`，然后进行修改。
+建议下载仓库中的 `config.example.json`，重命名为 `config.json`，然后进行修改。
+
+下面的模板是 `config.json` 中全部可用的配置项及其说明。
 
 需要注意，`JSON`文件不允许出现注释，如果使用下面的模板，请删除所有 `//` 开头的内容。
 
@@ -104,9 +108,9 @@ $ npm i
         }
     ],
 
-    // 刷新间隔（分钟）
+    // 刷新间隔（分钟，选填）
     "interval": 15,
-    // 访问延迟（秒）
+    // 访问延迟（秒，选填）
     "delay": 5
 }
 ```
@@ -147,7 +151,7 @@ Server 酱 Turbo：`https://sctapi.ftqq.com/××××.send?title=CRTicketMontor�
 
 ### 其他
 
-当然，你也可以自行选用其他的推送方式，编辑 `notifications.js` 即可。
+当然，你也可以自行选用其他的推送方式，在源码中的 `notifications.js` 编写即可。
 
 ## 席别设置
 
