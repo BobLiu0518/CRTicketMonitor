@@ -11,7 +11,7 @@ function die(err) {
         log.error('发生错误：', err);
     }
     log.line();
-    log.info('程序已结束');
+    log.info('程序已结束，将在 5 秒后退出');
     process.exit();
 }
 
@@ -183,8 +183,8 @@ function checkConfig() {
         log.error('解析 config.json 时发生错误：', err);
         die();
     }
-    log.info('当前配置文件：');
-    log.line();
+
+    let configParsing = '当前配置文件：\n';
     if (!config.watch || !config.watch.length) {
         log.error('未配置搜索条件');
         die();
@@ -194,58 +194,83 @@ function checkConfig() {
             log.error('搜索条件不完整');
             die();
         }
-        log.direct(search.date, search.from + '→' + search.to);
+        configParsing +=
+            search.date + ' ' + search.from + '→' + search.to + '\n';
         if (search.trains && search.trains.length) {
             for (let train of search.trains) {
                 if (!train.code) {
                     log.error('未填写车次号');
                     die();
                 }
-                log.direct(
-                    '-',
-                    train.code,
-                    (train.from ?? '(*)') + '→' + (train.to ?? '(*)'),
-                    train.seatCategory
+                configParsing +=
+                    '- ' +
+                    train.code +
+                    ' ' +
+                    (train.from ?? '(*)') +
+                    '→' +
+                    (train.to ?? '(*)') +
+                    ' ' +
+                    (train.seatCategory
                         ? train.seatCategory.join('/')
-                        : '全部席别',
-                    (train.checkRoundTrip ? '[✓]' : '[×]') + '查询全程票'
-                );
+                        : '全部席别') +
+                    ' ' +
+                    (train.checkRoundTrip ? '[✓]' : '[×]') +
+                    '查询全程票\n';
             }
         } else {
-            log.direct('-', '全部车次');
+            configParsing += '- 全部车次\n';
         }
-        log.line();
+        configParsing += '\n';
     }
 
     for (let notification of config.notifications) {
         try {
             let n = new Notifications[notification.type](notification);
             notifications.push(n);
-            log.direct(
-                `已配置消息推送：${n.info.name} (${n.info.description})`
-            );
+            configParsing +=
+                `已配置消息推送：${n.info.name} (${n.info.description})` + '\n';
         } catch (e) {
             log.error('配置消息推送时发生错误：', e);
         }
     }
+    configParsing += '\n';
+
     if (!notifications.length) {
         log.warn('未配置消息推送');
     }
-    log.line();
 
     if (!config.interval) config.interval = 15;
     if (!config.delay) config.delay = 5;
-    log.direct(`查询间隔：${config.interval}分钟，访问延迟：${config.delay}秒`);
+    configParsing += `查询间隔：${config.interval}分钟，访问延迟：${config.delay}秒`;
+
+    log.direct(configParsing);
     log.line();
+
+    sendMsg(configParsing).then(() => {
+        log.info('已尝试发送提醒，如未收到请检查配置');
+    });
 }
 
+process.title = 'CR Ticket Monitor';
 process.on('uncaughtException', die);
 process.on('unhandledRejection', die);
+process.on('exit', () => {
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5000);
+});
 
 console.clear();
+log.title(String.raw`
+           __________  ________  ___
+          / ____/ __ \/_  __/  |/  /
+         / /   / /_/ / / / / /|_/ /
+        / /___/ _  _/ / / / /  / /
+        \____/_/ |_| /_/ /_/  /_/
+
+`);
+log.title('本程序为开源程序，仓库地址：');
+log.title('https://github.com/BobLiu0518/CRTicketMonitor');
+log.line();
+
 checkConfig();
 setInterval(update, config.interval * 60 * 1000);
-sendMsg('12306 余票监控已启动').then(() => {
-    log.info('已发送测试提醒，如未收到请检查配置');
-});
 update();

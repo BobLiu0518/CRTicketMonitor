@@ -29,6 +29,9 @@ export let log = {
     direct(...msg) {
         console.log(chalk.magenta(...msg));
     },
+    title(...msg) {
+        console.log(chalk.cyan.bold(...msg));
+    },
     line() {
         console.log();
     },
