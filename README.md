@@ -4,17 +4,45 @@
 
 **注意**：本程序仅用来监控 12306 系统中的余票，并非用于抢票，也不会添加任何抢票相关的功能。程序作者不保证结果的准确性，**不为**任何使用本程序而产生的纠纷负责。
 
-# 使用方法
+# 部署
 
-## 安装 Node.js
+## 使用可执行程序
 
-前往 [Node.js 官网](https://nodejs.org/zh-cn) 安装。
+### 1. 下载
 
-## 安装依赖
+在 [GitHub Release](https://github.com/BobLiu0518/CRTicketMonitor/releases) 页面下载本程序的二进制文件。
+
+二进制文件使用 [Node.js SEA](https://nodejs.org/api/single-executable-applications.html) 打包，目前仅有 Windows x86_64 版本提供。
+
+### 2. 运行
+
+将 `config.json` 放置于可执行程序相同目录下后，直接运行即可。
+
+## 手动部署
+
+### 1. 安装 Node.js
+
+前往 [Node.js 官网](https://nodejs.org/zh-cn) 下载并安装，或使用 [包管理器](https://nodejs.org/zh-cn/download/package-manager) 安装。
+
+### 2. 下载代码
+
+直接 [下载 Zip 文件](https://github.com/BobLiu0518/CRTicketMonitor/archive/refs/heads/main.zip)，或使用 Git：
+
+```bash
+$ git clone git@github.com:BobLiu0518/CRTicketMonitor.git
+```
+
+### 3. 安装依赖
 
 ```bash
 $ npm i
 ```
+
+### 4. 运行
+
+本项目针对 `Linux` 服务器进行开发，安装 `screen` 后，运行 `./run.sh` 即可启动。
+
+如果使用其他系统，可以在命令行中输入 `npm start` 运行。
 
 ## 配置 config.json
 
@@ -142,9 +170,3 @@ Server 酱 Turbo：`https://sctapi.ftqq.com/××××.send?title=CRTicketMontor�
     -   `其他`（含包厢硬卧等）
     -   `YB`（未知类型）
     -   `SRRB`（未知类型）
-
-## 运行
-
-本项目针对 `Linux` 服务器进行开发，安装 `screen` 后，运行 `./run.sh` 即可启动。
-
-如果使用其他系统，可以在命令行中输入 `npm start` 运行。
