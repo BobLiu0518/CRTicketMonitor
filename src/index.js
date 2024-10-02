@@ -1,12 +1,20 @@
 import fs from 'fs';
-import { exit } from 'process';
 import ChinaRailway from './cr.js';
 import Notifications from './notifications.js';
 import { sleep, time, log } from './utils.js';
 
-let config = JSON.parse(fs.readFileSync('config.json', 'UTF-8') ?? '{}');
+let config;
 let { stationCode, stationName } = await ChinaRailway.getStationData();
 let notifications = [];
+
+function die(err) {
+    if (err) {
+        log.error('发生错误：', err);
+    }
+    log.line();
+    log.info('程序已结束');
+    process.exit();
+}
 
 async function sendMsg(msg) {
     for (let notification of notifications) {
@@ -159,23 +167,35 @@ async function update() {
 }
 
 function checkConfig() {
+    try {
+        config = fs.readFileSync('config.json', 'UTF-8');
+    } catch (err) {
+        log.error('读取 config.json 时发生错误：', err);
+        die();
+    }
+    try {
+        config = JSON.parse(config);
+    } catch (err) {
+        log.error('解析 config.json 时发生错误：', err);
+        die();
+    }
     log.info('当前配置文件：');
     log.line();
     if (!config.watch || !config.watch.length) {
         log.error('未配置搜索条件');
-        exit();
+        die();
     }
     for (let search of config.watch) {
         if (!search.date || !search.from || !search.to) {
             log.error('搜索条件不完整');
-            exit();
+            die();
         }
         log.direct(search.date, search.from + '→' + search.to);
         if (search.trains && search.trains.length) {
             for (let train of search.trains) {
                 if (!train.code) {
                     log.error('未填写车次号');
-                    exit();
+                    die();
                 }
                 log.direct(
                     '-',
@@ -215,9 +235,13 @@ function checkConfig() {
     log.line();
 }
 
+process.on('uncaughtException', die);
+process.on('unhandledRejection', die);
+
 console.clear();
-setInterval(update, config.interval * 60 * 1000);
 checkConfig();
-await sendMsg('12306 余票监控已启动');
-log.info('已发送测试提醒，如未收到请检查配置');
+setInterval(update, config.interval * 60 * 1000);
+sendMsg('12306 余票监控已启动').then(() => {
+    log.info('已发送测试提醒，如未收到请检查配置');
+});
 update();
