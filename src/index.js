@@ -9,8 +9,8 @@ let notifications = [];
 function die(err) {
     if (err && err != 'SIGINT') {
         log.error('发生错误：', err);
+        log.line();
     }
-    log.line();
     log.info('程序已结束，将在 5 秒后退出');
     process.exit();
 }
@@ -181,7 +181,22 @@ function checkConfig() {
     try {
         config = fs.readFileSync('config.json', 'UTF-8');
     } catch (err) {
-        log.error('读取 config.json 时发生错误：', err);
+        if (err.code == 'ENOENT') {
+            log.error('config.json 不存在');
+            try {
+                fs.writeFileSync(
+                    'config.json',
+                    JSON.stringify({ watch: [], notifications: [] })
+                );
+                log.info('已自动创建 config.json');
+                log.info('请根据需要修改后重启程序');
+            } catch (err) {
+                log.error('创建 config.json 失败');
+                log.info('请自行创建后重启程序');
+            }
+        } else {
+            log.error('读取 config.json 时发生错误：', err);
+        }
         die();
     }
     try {
@@ -191,7 +206,7 @@ function checkConfig() {
         die();
     }
 
-    let configParsing = '当前配置文件：\n';
+    let configParsing = '当前配置文件：\n\n';
     if (!config.watch || !config.watch.length) {
         log.error('未配置搜索条件');
         die();
@@ -240,16 +255,17 @@ function checkConfig() {
             log.error('配置消息推送时发生错误：', e);
         }
     }
-    configParsing += '\n';
-
     if (!notifications.length) {
         log.warn('未配置消息推送');
+        configParsing += '未配置消息推送\n';
     }
+    configParsing += '\n';
 
     if (!config.interval) config.interval = 15;
     if (!config.delay) config.delay = 5;
     configParsing += `查询间隔：${config.interval}分钟，访问延迟：${config.delay}秒`;
 
+    log.line();
     log.direct(configParsing);
     log.line();
 
