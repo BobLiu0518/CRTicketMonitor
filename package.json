@@ -24,5 +24,8 @@
     "devDependencies": {
         "esbuild": "^0.24.0",
         "postject": "^1.0.0-alpha.6"
+    },
+    "engines": {
+        "node": ">=20.12.0"
     }
 }
