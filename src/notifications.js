@@ -1,4 +1,3 @@
-import fs from 'fs';
 import moment from 'moment';
 import { createServer } from 'http';
 import WebSocket, { WebSocketServer } from 'ws';

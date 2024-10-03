@@ -1,5 +1,4 @@
 import fs from 'fs';
-import moment from 'moment';
 import ChinaRailway from './cr.js';
 import Notifications from './notifications.js';
 import { sleep, time, log, asset } from './utils.js';
