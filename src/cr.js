@@ -24,9 +24,7 @@ class ChinaRailway {
     }
 
     static async getStationData() {
-        let response = await fetch(
-            'https://kyfw.12306.cn/otn/resources/js/framework/station_name.js'
-        );
+        let response = await fetch('https://kyfw.12306.cn/otn/resources/js/framework/station_name.js');
         let stationList = (await response.text())
             .match(/(?<=').+(?=')/)[0]
             .split('@')
@@ -42,10 +40,7 @@ class ChinaRailway {
     }
 
     static async checkTickets(date, from, to, delay) {
-        if (
-            moment().isAfter(moment(date, 'YYYYMMDD')) ||
-            moment().add(15, 'days').isBefore(moment(date, 'YYYYMMDD'))
-        ) {
+        if (moment().isSameOrAfter(moment(date, 'YYYYMMDD').add(1, 'days')) || moment().add(15, 'days').isBefore(moment(date, 'YYYYMMDD'))) {
             throw new Error('日期需为0~15天内');
         }
         if (this.ticketCache[date + from + to]) {
