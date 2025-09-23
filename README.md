@@ -37,7 +37,7 @@ $ cd CRTicketMonitor
 
 ### 3. 运行
 
-本项目针对 Linux 服务器进行开发，安装 `screen` 后，运行 `./run.sh` 即可启动。
+在 Linux 服务器使用时，安装 `screen` 后，运行 `./run.sh` 即可启动。
 
 如果使用其他系统，可以在命令行中输入 `deno task start` 运行。
 
@@ -54,7 +54,7 @@ $ cd CRTicketMonitor
 ```jsonc
 {
     // JSON Schema（用于校验配置文件合法性）
-    "$schema": "./config.schema.json",
+    "$schema": "https://crtm.bobliu.tech/config.schema.json",
 
     // 查询列表
     "watch": [
@@ -127,13 +127,13 @@ $ cd CRTicketMonitor
 
 无需额外配置，直接运行即可。如果运行时提示端口 `Permission denied`，需修改 `config.json` 中的端口号后重试。端口号可以选择 1024\~65535 之间的数。~当然，你愿意的话 1\~1023 也可以~
 
-运行后，用浏览器打开提示的网址，允许浏览器进行通知即可。
+运行后，用浏览器打开提示的网址，并允许浏览器进行系统通知即可。
 
 安全起见，配置项中的监听地址 `host` 建议填写本机（即 `127.0.0.1`）。如果有其他设备需要连接，则需改为 `0.0.0.0`。
 
 ### Wecom 酱推送
 
-使用 [Wecom 酱](https://github.com/easychen/wecomchan)，可以直接将通知推送至微信。
+使用 [Wecom 酱](https://github.com/easychen/wecomchan)，可以直接将通知推送至个人微信。
 
 配置方法详见 [企业微信应用消息配置](https://github.com/easychen/wecomchan/blob/main/README.md#%E4%BC%81%E4%B8%9A%E5%BE%AE%E4%BF%A1%E5%BA%94%E7%94%A8%E6%B6%88%E6%81%AF%E9%85%8D%E7%BD%AE%E8%AF%B4%E6%98%8E)，将该文档中获取的 ①`agentid`、②`secret`、③`企业ID`三项内容分别填入 `config.json` 即可。
 
@@ -151,7 +151,9 @@ Server 酱 Turbo：`https://sctapi.ftqq.com/××××.send?title=CRTicketMontor�
 
 ### 其他
 
-当然，你也可以自行选用其他的推送方式，在 `notifications.js` 中进行编写即可。
+当然，你也可以自行选用其他的推送方式，在 `notifications.js` 中进行编写即可。编写完成后，推荐修改 `config.schema.json`，以实现最好的配置文件检查效果。
+
+欢迎自行编写的推送方式提交 Pull Request。
 
 ## 席别设置
 
