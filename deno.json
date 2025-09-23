@@ -1,0 +1,22 @@
+{
+    "name": "cr-ticket-monitor",
+    "version": "1.0.0",
+    "description": "12306 余票监控程序",
+    "author": "BobLiu",
+    "license": "GPL-2.0-only",
+    "exports": "./src/index.js",
+    "imports": {
+        "moment": "npm:moment@^2.30.1",
+        "chalk": "npm:chalk@^5.3.0",
+        "ws": "npm:ws@^8.18.0",
+        "open": "npm:open@^10.1.0"
+    },
+    "tasks": {
+        "start": "deno run --allow-net --allow-read --allow-write --allow-run --allow-sys --allow-env src/index.js",
+        "build": "deno compile --allow-net --allow-read --allow-write --allow-run --allow-sys --allow-env --include=config.example.json --include=browser --icon=assets/cr.ico --output=dist/CRTM src/index.js",
+        "build:ci": "deno compile --target=$BUILD_TARGET --allow-net --allow-read --allow-write --allow-run --allow-sys --allow-env --include=config.example.json --include=browser $EXTRA_ARGS --output=$BUILD_OUTPUT src/index.js"
+    },
+    "compilerOptions": {
+        "lib": ["deno.ns", "es2022"]
+    }
+}

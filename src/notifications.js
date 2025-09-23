@@ -1,6 +1,4 @@
 import moment from 'moment';
-import { createServer } from 'http';
-import WebSocket, { WebSocketServer } from 'ws';
 import { log, time, asset } from './utils.js';
 
 class NotificationBase {
@@ -14,11 +12,12 @@ class NotificationBase {
         this.config = config;
     }
 
-    async send(msg) {
+    send(msg) {
         console.log(msg);
+        return Promise.resolve(true);
     }
 
-    die() {}
+    die() { }
 }
 
 class WecomChanNotification extends NotificationBase {
@@ -84,10 +83,10 @@ class WecomChanNotification extends NotificationBase {
         });
         if (!sendMsgRes.ok) {
             throw new Error(
-                `${this.info.name} 发送失败：HTTP ${response.status}`
+                `${this.info.name} 发送失败：HTTP ${sendMsgRes.status}`
             );
         }
-        let data = await sendMsgRes.json();
+        const data = await sendMsgRes.json();
         if (data.errmsg != 'ok') {
             throw new Error(
                 `${this.info.name} 发送失败：[${data.errcode}] ${data.errmsg}`
@@ -110,7 +109,7 @@ class HTTPNotification extends NotificationBase {
 
     async send(msg) {
         msg = msg.title + '\n' + msg.time + '\n' + msg.content;
-        let response = await fetch(this.config.url + encodeURIComponent(msg));
+        const response = await fetch(this.config.url + encodeURIComponent(msg));
         if (!response.ok) {
             throw new Error(
                 `${this.info.name} 发送失败：HTTP ${response.status}`
@@ -137,92 +136,100 @@ class BrowserNotification extends NotificationBase {
             config.host = '127.0.0.1';
         }
 
-        this.httpServer = createServer((req, res) => {
-            if (req.url.match(/^\/(\?port=\d+)?$/)) {
-                res.writeHead(200, { 'Content-Type': 'text/html' });
-                res.end(asset('browser/index.html'));
-            } else if (req.url == '/cr.svg') {
-                res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
-                res.end(asset('browser/cr.svg'));
+        this.httpServer = Deno.serve({
+            port: config.port,
+            hostname: config.host,
+            onListen: async ({ port, hostname }) => {
+                const url = `http://${hostname}:${port}/`;
+                try {
+                    const { default: open } = await import('open');
+                    open(url);
+                    log.info(`${this.info.name}：已尝试自动打开 ${url}`);
+                } catch (_err) {
+                    log.info(`${this.info.name}：请用浏览器打开 ${url}`);
+                }
+            }
+        }, async (req) => {
+            const url = new URL(req.url);
+
+            if (req.headers.get("upgrade") === "websocket") {
+                const { socket, response } = Deno.upgradeWebSocket(req);
+
+                socket.onopen = () => {
+                    log.info(`${this.info.name} (${this.info.description}) 成功连接`);
+                    socket.send(JSON.stringify({
+                        type: 'history',
+                        content: this.history,
+                    }));
+                    socket.send(JSON.stringify({
+                        type: 'notice',
+                        content: {
+                            title: '[CRTicketMonitor]',
+                            time: time(),
+                            content: '浏览器推送连接成功',
+                        },
+                    }));
+                };
+
+                socket.onerror = (e) => {
+                    log.error(`${this.info.name} WebSocket 错误：${e}`);
+                };
+
+                socket.onclose = () => {
+                    log.info(`${this.info.name} (${this.info.description}) 连接已断开`);
+                };
+
+                if (!this.sockets) this.sockets = new Set();
+                this.sockets.add(socket);
+
+                socket.onclose = () => {
+                    this.sockets.delete(socket);
+                };
+
+                return response;
+            }
+
+            if (url.pathname.match(/^\/(\?port=\d+)?$/)) {
+                return new Response(await asset('browser/index.html'), {
+                    headers: { 'Content-Type': 'text/html' }
+                });
+            } else if (url.pathname === '/cr.svg') {
+                return new Response(await asset('browser/cr.svg'), {
+                    headers: { 'Content-Type': 'image/svg+xml' }
+                });
             } else {
-                res.writeHead(404).end('404 Not Found');
+                return new Response('404 Not Found', { status: 404 });
             }
         });
-        this.httpServer.on('error', (err) => {
-            log.error('HTTP 服务器错误：', err);
-        });
 
-        this.wsServer = new WebSocketServer({ server: this.httpServer });
-        this.wsServer.on('connection', (ws) => {
-            log.info(`${this.info.name} (${this.info.description}) 成功连接`);
-            ws.on('error', (e) => {
-                log.error(`${this.info.name} WebSocket 错误：${e}`);
-            });
-            ws.on('close', () => {
-                log[this.wsServer.clients.size ? 'info' : 'warn'](
-                    `${this.info.name} (${this.info.description}) 连接已断开`
-                );
-            });
-            ws.send(
-                JSON.stringify({
-                    type: 'history',
-                    content: this.history,
-                })
-            );
-            ws.send(
-                JSON.stringify({
-                    type: 'notice',
-                    content: {
-                        title: '[CRTicketMonitor]',
-                        time: time(),
-                        content: '浏览器推送连接成功',
-                    },
-                })
-            );
-        });
-        this.wsServer.on('error', (err) => {
-            log.error('WebSocket 服务器错误：', err);
-        });
-
-        let url = `http://127.0.0.1:${config.port}/`;
-        this.httpServer.on('listening', async () => {
-            log.info(`${this.info.name}：请用浏览器打开 ${url}`);
-            try {
-                const { default: open } = await import('open');
-                open(url);
-            } catch (err) {}
-        });
-        this.httpServer.listen(config.port, config.host);
+        this.sockets = new Set();
     }
 
-    async send(msg) {
-        for (let ws of this.wsServer.clients) {
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.send(
-                    JSON.stringify({
-                        type: 'notice',
-                        content: msg,
-                    })
-                );
+    send(msg) {
+        for (const socket of this.sockets || []) {
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'notice',
+                    content: msg,
+                }));
             }
         }
         this.history.push(msg);
+        return Promise.resolve(true);
     }
 
     die() {
-        for (let ws of this.wsServer.clients) {
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.send(
-                    JSON.stringify({
-                        type: 'die',
-                    }),
-                    () => {
-                        ws.terminate();
-                    }
-                );
+        for (const socket of this.sockets || []) {
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'die',
+                }));
+                socket.close();
             }
         }
-        this.httpServer.close();
+        if (this.httpServer) {
+            this.httpServer.shutdown();
+        }
     }
 }
 

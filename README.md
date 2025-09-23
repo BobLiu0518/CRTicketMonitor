@@ -12,7 +12,7 @@
 
 在 [GitHub Release](https://github.com/BobLiu0518/CRTicketMonitor/releases/latest) 页面下载本程序的二进制文件。
 
-二进制文件使用 [Node.js SEA](https://nodejs.org/api/single-executable-applications.html) 打包，目前仅有 Windows x86_64 和 arm64 版本提供。
+二进制文件使用 [Deno 编译](https://docs.deno.com/runtime/reference/cli/compile/) 打包。由于 Deno 限制，不再提供 Windows arm64 二进制文件。
 
 ### 2. 运行
 
@@ -22,9 +22,9 @@
 
 ## 手动部署
 
-### 1. 安装 Node.js
+### 1. 安装 Deno
 
-前往 [Node.js 官网](https://nodejs.org/zh-cn) 下载并安装，或使用 [包管理器](https://nodejs.org/zh-cn/download/package-manager) 安装。
+参照 Deno 官网的 [安装](https://docs.deno.com/runtime/getting_started/installation/) 教程进行安装。
 
 ### 2. 下载代码
 
@@ -32,19 +32,14 @@
 
 ```bash
 $ git clone git@github.com:BobLiu0518/CRTicketMonitor.git
+$ cd CRTicketMonitor
 ```
 
-### 3. 安装依赖
-
-```bash
-$ npm i
-```
-
-### 4. 运行
+### 3. 运行
 
 本项目针对 Linux 服务器进行开发，安装 `screen` 后，运行 `./run.sh` 即可启动。
 
-如果使用其他系统，可以在命令行中输入 `npm start` 运行。
+如果使用其他系统，可以在命令行中输入 `deno task start` 运行。
 
 ## 配置
 
@@ -54,7 +49,7 @@ $ npm i
 
 需要注意，`JSON`文件不允许出现注释，如果使用下面的模板，请删除所有 `//` 开头的内容。
 
-```json
+```jsonc
 {
     // 查询列表
     "watch": [

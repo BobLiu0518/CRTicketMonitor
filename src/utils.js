@@ -1,13 +1,11 @@
-import fs from 'fs';
 import moment from 'moment';
 import chalk from 'chalk';
-import { isSea, getAsset } from 'node:sea';
 
 export function time() {
     return moment().format('YYYY/MM/DD HH:mm:ss');
 }
 
-export async function sleep(n) {
+export function sleep(n) {
     return new Promise((resolve) => {
         setTimeout(() => {
             resolve();
@@ -15,7 +13,7 @@ export async function sleep(n) {
     });
 }
 
-export let log = {
+export const log = {
     info(...msg) {
         console.log(chalk.cyan(time()), chalk.bold('[Info]'), ...msg);
     },
@@ -39,10 +37,7 @@ export let log = {
     },
 };
 
-export function asset(name) {
-    if (isSea()) {
-        return getAsset(name, 'UTF-8');
-    } else {
-        return fs.readFileSync(name);
-    }
+export async function asset(assetPath) {
+    const filePath = Deno.build.standalone ? import.meta.dirname + "/../" + assetPath : assetPath;
+    return await Deno.readTextFile(filePath);
 }

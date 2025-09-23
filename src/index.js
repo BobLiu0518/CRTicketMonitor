@@ -1,29 +1,28 @@
-import fs from 'fs';
 import ChinaRailway from './cr.js';
 import Notifications from './notifications.js';
 import { sleep, time, log, asset } from './utils.js';
 
 let config;
-let notifications = [];
+const notifications = [];
 
 function die(err) {
     if (err && err != 'SIGINT') {
-        log.error('发生错误：', err);
+        log.error('发生错误：', err.message);
         log.line();
     }
     log.info('程序已结束，将在 5 秒后退出');
-    process.exit();
+    Deno.exit();
 }
 
 function clean() {
-    for (let notification of notifications) {
+    for (const notification of notifications) {
         notification.die();
     }
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5000);
 }
 
-async function sendMsg(msg) {
-    for (let notification of notifications) {
+function sendMsg(msg) {
+    for (const notification of notifications) {
         notification
             .send({
                 title: '[CRTicketMonitor]',
@@ -32,7 +31,7 @@ async function sendMsg(msg) {
             })
             .catch((err) => {
                 log.error(
-                    `${notification.info.name} (${notification.info.description}) 发送失败：${err}`
+                    `${notification.info.name} (${notification.info.description}) 发送失败：${err.message}`
                 );
             });
     }
@@ -40,29 +39,29 @@ async function sendMsg(msg) {
 
 async function searchTickets(search) {
     log.info(`查询 ${search.date} ${search.from}→${search.to} 车票：`);
-    let data = await ChinaRailway.checkTickets(
+    const data = await ChinaRailway.checkTickets(
         search.date,
         await ChinaRailway.getStationCode(search.from),
         await ChinaRailway.getStationCode(search.to)
     );
-    for (let row of data.data.result) {
-        let trainInfo = ChinaRailway.parseTrainInfo(row);
+    for (const row of data.data.result) {
+        const trainInfo = ChinaRailway.parseTrainInfo(row);
         if (!search.trains) {
             await determineRemainTickets(trainInfo);
         } else {
-            for (let train of search.trains) {
+            for (const train of search.trains) {
                 if (
                     train.code == trainInfo.station_train_code &&
                     (train.from === undefined ||
                         train.from ==
-                            ChinaRailway.stationName[
-                                trainInfo.from_station_telecode
-                            ]) &&
+                        ChinaRailway.stationName[
+                        trainInfo.from_station_telecode
+                        ]) &&
                     (train.to === undefined ||
                         train.to ==
-                            ChinaRailway.stationName[
-                                trainInfo.to_station_telecode
-                            ])
+                        ChinaRailway.stationName[
+                        trainInfo.to_station_telecode
+                        ])
                 ) {
                     await determineRemainTickets(
                         trainInfo,
@@ -80,7 +79,7 @@ async function determineRemainTickets(
     seatCategory = undefined,
     checkRoundTrip = false
 ) {
-    let trainDescription =
+    const trainDescription =
         trainInfo.station_train_code +
         ' ' +
         (await ChinaRailway.getStationName(trainInfo.from_station_telecode)) +
@@ -101,9 +100,9 @@ async function determineRemainTickets(
 }
 
 async function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
-    let remainTypes = [];
+    const remainTypes = [];
     let remainTotal = 0;
-    for (let type of Object.keys(trainInfo.tickets)) {
+    for (const type of Object.keys(trainInfo.tickets)) {
         if (seatCategory !== undefined && !seatCategory.includes(type)) {
             continue;
         }
@@ -129,29 +128,28 @@ async function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
             msg: '区间无票',
         };
     }
-    let roundTripData = await ChinaRailway.checkTickets(
+    const roundTripData = await ChinaRailway.checkTickets(
         trainInfo.start_train_date,
         trainInfo.start_station_telecode,
         trainInfo.end_station_telecode,
         sleep(config.delay * 1000)
     );
-    for (let row of roundTripData.data.result) {
-        let roundTripInfo = ChinaRailway.parseTrainInfo(row);
+    for (const row of roundTripData.data.result) {
+        const roundTripInfo = ChinaRailway.parseTrainInfo(row);
         if (
             trainInfo.train_no == roundTripInfo.train_no &&
             trainInfo.start_station_telecode ==
-                roundTripInfo.from_station_telecode &&
+            roundTripInfo.from_station_telecode &&
             trainInfo.end_station_telecode == roundTripInfo.to_station_telecode
         ) {
-            let { remain: roundTripRemain, total: roundTripRemainTotal } =
+            const { remain: roundTripRemain, total: roundTripRemainTotal } =
                 await checkRemainTickets(roundTripInfo, seatCategory, false);
             return {
                 remain: false,
-                msg: `区间无票，全程${
-                    roundTripRemain
-                        ? `有票 (${roundTripRemainTotal}张)`
-                        : '无票'
-                }`,
+                msg: `区间无票，全程${roundTripRemain
+                    ? `有票 (${roundTripRemainTotal}张)`
+                    : '无票'
+                    }`,
             };
         }
     }
@@ -164,30 +162,31 @@ async function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
 async function update() {
     log.info('开始查询余票');
     try {
-        for (let search of config.watch) {
+        for (const search of config.watch) {
             await searchTickets(search);
             await sleep(config.delay * 1000);
         }
         ChinaRailway.clearTicketCache();
     } catch (e) {
-        log.error(e);
+        log.error(e.message);
         sendMsg('错误：' + e.message);
     }
     log.info('余票查询完成');
     log.line();
 }
 
-function checkConfig() {
+async function checkConfig() {
     try {
-        config = fs.readFileSync('config.json', 'UTF-8');
+        const configText = Deno.readTextFileSync('config.json');
+        config = JSON.parse(configText);
     } catch (err) {
-        if (err.code == 'ENOENT') {
+        if (err instanceof Deno.errors.NotFound) {
             log.error('config.json 不存在');
             try {
-                fs.writeFileSync('config.json', asset('config.example.json'));
+                Deno.writeTextFileSync('config.json', await asset('config.example.json'));
                 log.info('已自动创建 config.json');
                 log.info('请根据需要修改后重启程序');
-            } catch (err) {
+            } catch (_err) {
                 log.error('创建 config.json 失败');
                 log.info('请自行创建后重启程序');
             }
@@ -196,19 +195,13 @@ function checkConfig() {
         }
         die();
     }
-    try {
-        config = JSON.parse(config);
-    } catch (err) {
-        log.error('解析 config.json 时发生错误：', err);
-        die();
-    }
 
     let configParsing = '当前配置文件：\n\n';
     if (!config.watch || !config.watch.length) {
         log.error('未配置搜索条件');
         die();
     }
-    for (let search of config.watch) {
+    for (const search of config.watch) {
         if (!search.date || !search.from || !search.to) {
             log.error('搜索条件不完整');
             die();
@@ -216,7 +209,7 @@ function checkConfig() {
         configParsing +=
             search.date + ' ' + search.from + '→' + search.to + '\n';
         if (search.trains && search.trains.length) {
-            for (let train of search.trains) {
+            for (const train of search.trains) {
                 if (!train.code) {
                     log.error('未填写车次号');
                     die();
@@ -242,14 +235,24 @@ function checkConfig() {
         configParsing += '\n';
     }
 
-    for (let notification of config.notifications) {
+    for (const notification of config.notifications) {
         try {
-            let n = new Notifications[notification.type](notification);
+            if (!notification.type) {
+                throw new Error('未指定推送类型');
+            }
+
+            const NotificationClass = Notifications[notification.type];
+            if (!NotificationClass) {
+                const availableTypes = Object.keys(Notifications).join(', ');
+                throw new Error(`不支持的推送类型："${notification.type}"，支持的类型有：${availableTypes}`);
+            }
+
+            const n = new NotificationClass(notification);
             notifications.push(n);
             configParsing +=
                 `已配置消息推送：${n.info.name} (${n.info.description})` + '\n';
         } catch (e) {
-            log.error('配置消息推送时发生错误：', e);
+            log.error('配置消息推送时发生错误：', e.message);
         }
     }
     if (!notifications.length) {
@@ -266,31 +269,40 @@ function checkConfig() {
     log.direct(configParsing);
     log.line();
 
-    sendMsg(configParsing).then(() => {
-        log.info('已尝试发送提醒，如未收到请检查配置');
-    });
+    sendMsg(configParsing);
+    log.info('已尝试发送提醒，如未收到请检查配置');
 }
 
-process.title = 'CR Ticket Monitor';
-process.on('uncaughtException', die);
-process.on('unhandledRejection', die);
-process.on('SIGINT', die);
-process.on('exit', clean);
+globalThis.addEventListener('unload', clean);
+globalThis.addEventListener('beforeunload', clean);
+Deno.addSignalListener('SIGINT', () => die('SIGINT'));
+globalThis.addEventListener('error', (event) => {
+    die(event.error);
+});
+globalThis.addEventListener('unhandledrejection', (event) => {
+    die(event.reason);
+});
 
-console.clear();
-log.title(String.raw`
-           __________  ________  ___
-          / ____/ __ \/_  __/  |/  /
-         / /   / /_/ / / / / /|_/ /
-        / /___/ _  _/ / / / /  / /
-        \____/_/ |_| /_/ /_/  /_/
+async function main() {
+    console.clear();
+    log.title(String.raw`
+               __________  ________  ___
+              / ____/ __ \/_  __/  |/  /
+             / /   / /_/ / / / / /|_/ /
+            / /___/ _  _/ / / / /  / /
+            \____/_/ |_| /_/ /_/  /_/
 
-`);
-log.title('本程序为开源程序，仓库地址：');
-log.title('https://github.com/BobLiu0518/CRTicketMonitor');
-log.line();
+    `);
+    log.title('本程序为开源程序，仓库地址：');
+    log.title('https://github.com/BobLiu0518/CRTicketMonitor');
+    log.line();
 
-checkConfig();
-log.info('5秒后开始首次查询，按 Ctrl+C 中止');
-setInterval(update, config.interval * 60 * 1000);
-setTimeout(update, 5 * 1000);
+    await checkConfig();
+    log.info('5秒后开始首次查询，按 Ctrl+C 中止');
+    setInterval(update, config.interval * 60 * 1000);
+    setTimeout(update, 5 * 1000);
+}
+
+main().catch(err => {
+    die(err);
+});

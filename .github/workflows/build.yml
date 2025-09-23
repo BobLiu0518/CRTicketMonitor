@@ -1,0 +1,72 @@
+name: Build
+
+on:
+    push:
+        tags:
+            - 'v*'
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                target:
+                    - name: windows-x86_64
+                      target: x86_64-pc-windows-msvc
+                      icon: true
+                      ext: .exe
+                    - name: linux-x86_64
+                      target: x86_64-unknown-linux-gnu
+                    - name: linux-arm64
+                      target: aarch64-unknown-linux-gnu
+                    - name: macos-x86_64
+                      target: x86_64-apple-darwin
+                    - name: macos-arm64
+                      target: aarch64-apple-darwin
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Deno
+              uses: denoland/setup-deno@v1
+              with:
+                  deno-version: v2.x
+
+            - name: Build binary
+              env:
+                  BUILD_TARGET: ${{ matrix.target.target }}
+                  BUILD_OUTPUT: dist/CRTM-${{ matrix.target.name }}${{ matrix.target.ext }}
+                  EXTRA_ARGS: ${{ matrix.target.icon && '--icon=assets/cr.ico' || '' }}
+              run: |
+                  mkdir -p dist
+                  deno task build:ci
+
+            - name: Upload artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: CRTM-${{ matrix.target.name }}
+                  path: dist/CRTM-${{ matrix.target.name }}${{ matrix.target.ext }}
+
+    release:
+        needs: build
+        runs-on: ubuntu-latest
+        if: startsWith(github.ref, 'refs/tags/v')
+
+        steps:
+            - name: Download all artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  path: dist
+
+            - name: Create Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  files: dist/**/*
+                  generate_release_notes: true
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

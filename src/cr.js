@@ -24,8 +24,8 @@ class ChinaRailway {
     }
 
     static async getStationData() {
-        let response = await fetch('https://kyfw.12306.cn/otn/resources/js/framework/station_name.js');
-        let stationList = (await response.text())
+        const response = await fetch('https://kyfw.12306.cn/otn/resources/js/framework/station_name.js');
+        const stationList = (await response.text())
             .match(/(?<=').+(?=')/)[0]
             .split('@')
             .slice(1);
@@ -33,7 +33,7 @@ class ChinaRailway {
         this.stationCode = {};
         this.stationName = {};
         stationList.forEach((station) => {
-            let details = station.split('|');
+            const details = station.split('|');
             this.stationCode[details[1]] = details[2];
             this.stationName[details[2]] = details[1];
         });
@@ -50,7 +50,7 @@ class ChinaRailway {
         if (delay) {
             await delay;
         }
-        let api =
+        const api =
             'https://kyfw.12306.cn/otn/leftTicket/queryG?leftTicketDTO.train_date=' +
             moment(date, 'YYYYMMDD').format('YYYY-MM-DD') +
             '&leftTicketDTO.from_station=' +
@@ -58,12 +58,12 @@ class ChinaRailway {
             '&leftTicketDTO.to_station=' +
             to +
             '&purpose_codes=ADULT';
-        let res = await fetch(api, {
+        const res = await fetch(api, {
             headers: {
                 Cookie: 'JSESSIONID=',
             },
         });
-        let data = await res.json();
+        const data = await res.json();
         if (!data || !data.status) {
             throw new Error('获取余票数据失败');
         }
@@ -74,8 +74,8 @@ class ChinaRailway {
 
     static parseTrainInfo(str) {
         // Ref: https://kyfw.12306.cn/otn/resources/merged/queryLeftTicket_end_js.js
-        let arr = str.split('|');
-        let data = {
+        const arr = str.split('|');
+        const data = {
             secretStr: arr[0],
             buttonTextInfo: arr[1],
             train_no: arr[2],
