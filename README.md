@@ -45,12 +45,17 @@ $ cd CRTicketMonitor
 
 若 `config.json` 不存在，启动 CRTM 会自动生成 `config.json`，可在其基础上进行更改。
 
+建议使用 [Visual Studio Code](https://code.visualstudio.com) 或其他现代编辑器打开 `config.json`，从而享受自动配置文件格式检查。
+
 下面的模板是 `config.json` 中全部可用的配置项及其说明。
 
 需要注意，`JSON`文件不允许出现注释，如果使用下面的模板，请删除所有 `//` 开头的内容。
 
 ```jsonc
 {
+    // JSON Schema（用于校验配置文件合法性）
+    "$schema": "./config.schema.json",
+
     // 查询列表
     "watch": [
         // 可添加多个查询
@@ -120,7 +125,7 @@ $ cd CRTicketMonitor
 
 门槛最低的推送方式，只需保持浏览器后台运行即可。
 
-无需额外配置，直接运行即可。如果运行时提示端口 `Permission denied`，需修改 `config.json` 中的端口号后重试。端口号可以选择 1024\~65535 之间的数。~当然，你愿意的话 0\~1023 也可以~
+无需额外配置，直接运行即可。如果运行时提示端口 `Permission denied`，需修改 `config.json` 中的端口号后重试。端口号可以选择 1024\~65535 之间的数。~当然，你愿意的话 1\~1023 也可以~
 
 运行后，用浏览器打开提示的网址，允许浏览器进行通知即可。
 

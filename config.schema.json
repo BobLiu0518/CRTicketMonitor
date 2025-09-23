@@ -1,0 +1,183 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "CRTM config.json Schema",
+    "description": "JSON schema for CRTicketMonitor config.json",
+    "type": "object",
+    "properties": {
+        "$schema": {
+            "type": "string",
+            "description": "JSON Schema"
+        },
+        "watch": {
+            "type": "array",
+            "description": "查询列表",
+            "minItems": 1,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "from": {
+                        "type": "string",
+                        "description": "起点站（包含同城站）",
+                        "minLength": 1
+                    },
+                    "to": {
+                        "type": "string",
+                        "description": "终点站（包含同城站）",
+                        "minLength": 1
+                    },
+                    "date": {
+                        "type": "string",
+                        "description": "日期（YYYYMMDD）",
+                        "pattern": "^\\d{4}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])$"
+                    },
+                    "trains": {
+                        "type": "array",
+                        "description": "车次列表（选填），不填时默认为全部车次",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "type": "string",
+                                    "description": "车次号",
+                                    "pattern": "^[GCDZTKYL]?\\d{1,4}$"
+                                },
+                                "from": {
+                                    "type": "string",
+                                    "description": "指定起点站（选填）"
+                                },
+                                "to": {
+                                    "type": "string",
+                                    "description": "指定终点站（选填）"
+                                },
+                                "seatCategory": {
+                                    "type": "array",
+                                    "description": "限定席别（选填）",
+                                    "items": {
+                                        "type": "string",
+                                        "enum": [
+                                            "高级软卧",
+                                            "软卧",
+                                            "硬卧",
+                                            "商务座",
+                                            "特等座",
+                                            "优选一等座",
+                                            "一等座",
+                                            "二等座",
+                                            "软座",
+                                            "硬座",
+                                            "无座",
+                                            "其他",
+                                            "YB",
+                                            "SRRB"
+                                        ]
+                                    },
+                                    "minItems": 1
+                                },
+                                "checkRoundTrip": {
+                                    "type": "boolean",
+                                    "description": "查询全程车票情况（选填）"
+                                }
+                            },
+                            "required": ["code"],
+                            "additionalProperties": false
+                        }
+                    }
+                },
+                "required": ["from", "to", "date"],
+                "additionalProperties": false
+            }
+        },
+        "notifications": {
+            "type": "array",
+            "description": "推送配置",
+            "items": {
+                "type": "object",
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "const": "Browser",
+                                "description": "推送类型（浏览器推送）"
+                            },
+                            "host": {
+                                "type": "string",
+                                "description": "监听地址（选填）",
+                                "minLength": 1
+                            },
+                            "port": {
+                                "type": "integer",
+                                "description": "监听端口",
+                                "minimum": 1,
+                                "maximum": 65535
+                            }
+                        },
+                        "required": ["type", "port"],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "const": "WecomChan",
+                                "description": "推送类型（WeCom酱推送）"
+                            },
+                            "agentId": {
+                                "type": "string",
+                                "description": "应用 ID",
+                                "minLength": 1
+                            },
+                            "secret": {
+                                "type": "string",
+                                "description": "应用 Secret",
+                                "minLength": 1
+                            },
+                            "companyId": {
+                                "type": "string",
+                                "description": "企业 ID",
+                                "minLength": 1
+                            },
+                            "toUid": {
+                                "type": "string",
+                                "description": "发送目标 Uid",
+                                "minLength": 1
+                            }
+                        },
+                        "required": ["type", "agentId", "secret", "companyId", "toUid"],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "const": "HTTP",
+                                "description": "推送类型（HTTP推送）"
+                            },
+                            "url": {
+                                "type": "string",
+                                "description": "推送地址",
+                                "format": "uri"
+                            }
+                        },
+                        "required": ["type", "url"],
+                        "additionalProperties": false
+                    }
+                ]
+            }
+        },
+        "interval": {
+            "type": "integer",
+            "description": "刷新间隔（分钟，选填）",
+            "minimum": 1,
+            "maximum": 1440
+        },
+        "delay": {
+            "type": "integer",
+            "description": "访问延迟（秒，选填）",
+            "minimum": 0,
+            "maximum": 3600
+        }
+    },
+    "required": ["watch", "notifications"],
+    "additionalProperties": false
+}

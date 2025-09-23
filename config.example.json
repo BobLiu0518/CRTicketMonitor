@@ -1,4 +1,5 @@
 {
+    "$schema": "https://crtm.bobliu.tech/config.schema.json",
     "watch": [
         {
             "from": "上海",
