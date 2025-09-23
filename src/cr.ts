@@ -1,34 +1,37 @@
 import moment from 'moment';
+import type { TrainInfo, TicketApiResponse } from './types.ts';
 
 class ChinaRailway {
-    static ticketCache = [];
-    static stationName;
-    static stationCode;
+    static ticketCache: Record<string, TicketApiResponse> = {};
+    static stationName: Record<string, string>;
+    static stationCode: Record<string, string>;
 
-    static async getStationName(code) {
+    static async getStationName(code: string): Promise<string> {
         if (!this.stationName) {
             await this.getStationData();
         }
         return this.stationName[code];
     }
 
-    static async getStationCode(name) {
+    static async getStationCode(name: string): Promise<string> {
         if (!this.stationCode) {
             await this.getStationData();
         }
         return this.stationCode[name];
     }
 
-    static clearTicketCache() {
-        this.ticketCache = [];
+    static clearTicketCache(): void {
+        this.ticketCache = {};
     }
 
-    static async getStationData() {
+    static async getStationData(): Promise<void> {
         const response = await fetch('https://kyfw.12306.cn/otn/resources/js/framework/station_name.js');
-        const stationList = (await response.text())
-            .match(/(?<=').+(?=')/)[0]
-            .split('@')
-            .slice(1);
+        const stationText = await response.text();
+        const match = stationText.match(/(?<=').+(?=')/);
+        if (!match) {
+            throw new Error('无法解析车站数据');
+        }
+        const stationList = match[0].split('@').slice(1);
 
         this.stationCode = {};
         this.stationName = {};
@@ -39,7 +42,7 @@ class ChinaRailway {
         });
     }
 
-    static async checkTickets(date, from, to, delay) {
+    static async checkTickets(date: string, from: string, to: string, delay?: Promise<void>): Promise<TicketApiResponse> {
         if (moment().isSameOrAfter(moment(date, 'YYYYMMDD').add(1, 'days')) || moment().add(15, 'days').isBefore(moment(date, 'YYYYMMDD'))) {
             throw new Error('日期需为0~15天内');
         }
@@ -63,7 +66,7 @@ class ChinaRailway {
                 Cookie: 'JSESSIONID=',
             },
         });
-        const data = await res.json();
+        const data: TicketApiResponse = await res.json();
         if (!data || !data.status) {
             throw new Error('获取余票数据失败');
         }
@@ -72,7 +75,7 @@ class ChinaRailway {
         return data;
     }
 
-    static parseTrainInfo(str) {
+    static parseTrainInfo(str: string): TrainInfo {
         // Ref: https://kyfw.12306.cn/otn/resources/merged/queryLeftTicket_end_js.js
         const arr = str.split('|');
         const data = {
@@ -124,24 +127,24 @@ class ChinaRailway {
             bed_level_info: arr[53],
             seat_discount_info: arr[54],
             sale_time: arr[55],
+            tickets: {
+                优选一等座: arr[20],
+                高级软卧: arr[21],
+                其他: arr[22],
+                软卧: arr[23],
+                软座: arr[24],
+                特等座: arr[25],
+                无座: arr[26],
+                YB: arr[27],
+                硬卧: arr[28],
+                硬座: arr[29],
+                二等座: arr[30],
+                一等座: arr[31],
+                商务座: arr[32],
+                SRRB: arr[33],
+            },
         };
-        data.tickets = {
-            优选一等座: data.gg_num,
-            高级软卧: data.gr_num,
-            其他: data.qt_num,
-            软卧: data.rw_num,
-            软座: data.rz_num,
-            特等座: data.tz_num,
-            无座: data.wz_num,
-            YB: data.yb_num /* ? */,
-            硬卧: data.yw_num,
-            硬座: data.yz_num,
-            二等座: data.ze_num,
-            一等座: data.zy_num,
-            商务座: data.swz_num,
-            SRRB: data.srrb_num /* ? */,
-        };
-        return data;
+        return data as TrainInfo;
     }
 }
 

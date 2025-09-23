@@ -151,7 +151,7 @@ Server 酱 Turbo：`https://sctapi.ftqq.com/××××.send?title=CRTicketMontor�
 
 ### 其他
 
-当然，你也可以自行选用其他的推送方式，在 `notifications.js` 中进行编写即可。编写完成后，推荐修改 `config.schema.json`，以实现最好的配置文件检查效果。
+当然，你也可以自行选用其他的推送方式，在 `notifications.ts` 中进行编写即可。编写完成后，推荐修改 `config.schema.json`，以实现最好的配置文件检查效果。
 
 欢迎自行编写的推送方式提交 Pull Request。
 
