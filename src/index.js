@@ -138,7 +138,7 @@ async function checkRemainTickets(trainInfo, seatCategory, checkRoundTrip) {
     for (let row of roundTripData.data.result) {
         let roundTripInfo = ChinaRailway.parseTrainInfo(row);
         if (
-            trainInfo.station_train_code == roundTripInfo.station_train_code &&
+            trainInfo.train_no == roundTripInfo.train_no &&
             trainInfo.start_station_telecode ==
                 roundTripInfo.from_station_telecode &&
             trainInfo.end_station_telecode == roundTripInfo.to_station_telecode
