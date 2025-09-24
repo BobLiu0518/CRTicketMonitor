@@ -148,7 +148,7 @@ class BrowserNotification extends NotificationBase {
                 onListen: async ({ port, hostname }) => {
                     const url = `http://${hostname}:${port}/`;
                     try {
-                        const { default: open } = await import('open');
+                        const { open } = await import('@opensrc/deno-open');
                         open(url);
                         log.info(`${this.info.name}：已尝试自动打开 ${url}`);
                     } catch (_err) {
