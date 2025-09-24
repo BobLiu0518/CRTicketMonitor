@@ -1,4 +1,3 @@
-import moment from 'moment';
 import { log, time, asset } from './utils.ts';
 import type {
     Message,
@@ -53,7 +52,7 @@ class WecomChanNotification extends NotificationBase {
     }
 
     getTimestamp(): number {
-        return parseInt(moment().format('X'));
+        return Math.floor(Date.now() / 1000);
     }
 
     async getToken(): Promise<void> {

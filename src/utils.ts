@@ -1,8 +1,8 @@
-import moment from 'moment';
-import chalk from 'chalk';
+import { format } from '@std/datetime';
+import { cyan, red, yellow, green, magenta, bold } from '@std/fmt/colors';
 
 export function time(): string {
-    return moment().format('YYYY/MM/DD HH:mm:ss');
+    return format(new Date(), 'yyyy/MM/dd HH:mm:ss');
 }
 
 export function sleep(n: number): Promise<void> {
@@ -15,22 +15,22 @@ export function sleep(n: number): Promise<void> {
 
 export const log = {
     info(...msg: unknown[]): void {
-        console.log(chalk.cyan(time()), chalk.bold('[Info]'), ...msg);
+        console.log(cyan(time()), bold('[Info]'), ...msg);
     },
     error(...msg: unknown[]): void {
-        console.error(chalk.cyan(time()), chalk.red.bold('[Error]'), ...msg);
+        console.error(cyan(time()), bold(red('[Error]')), ...msg);
     },
     warn(...msg: unknown[]): void {
-        console.log(chalk.cyan(time()), chalk.yellow.bold('[Warn]'), ...msg);
+        console.log(cyan(time()), bold(yellow('[Warn]')), ...msg);
     },
     success(...msg: unknown[]): void {
-        console.log(chalk.cyan(time()), chalk.green.bold('[Success]'), ...msg);
+        console.log(cyan(time()), bold(green('[Success]')), ...msg);
     },
     direct(...msg: unknown[]): void {
-        console.log(chalk.magenta(...msg));
+        console.log(magenta(msg.join(' ')));
     },
     title(...msg: unknown[]): void {
-        console.log(chalk.cyan.bold(...msg));
+        console.log(bold(cyan(msg.join(' '))));
     },
     line(): void {
         console.log();

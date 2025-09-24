@@ -6,9 +6,8 @@
     "license": "GPL-2.0-only",
     "exports": "./src/index.ts",
     "imports": {
-        "moment": "npm:moment@^2.30.1",
-        "chalk": "npm:chalk@^5.3.0",
-        "ws": "npm:ws@^8.18.0",
+        "@std/datetime": "jsr:@std/datetime@^0.225.0",
+        "@std/fmt": "jsr:@std/fmt@^1.0.0",
         "open": "npm:open@^10.1.0"
     },
     "tasks": {

@@ -1,4 +1,4 @@
-import moment from 'moment';
+import { format } from '@std/datetime';
 import type { TrainInfo, TicketApiResponse } from './types.ts';
 
 class ChinaRailway {
@@ -43,7 +43,13 @@ class ChinaRailway {
     }
 
     static async checkTickets(date: string, from: string, to: string, delay?: Promise<void>): Promise<TicketApiResponse> {
-        if (moment().isSameOrAfter(moment(date, 'YYYYMMDD').add(1, 'days')) || moment().add(15, 'days').isBefore(moment(date, 'YYYYMMDD'))) {
+        const today = new Date();
+        const targetDate = new Date(parseInt(date.substring(0, 4)), parseInt(date.substring(4, 6)) - 1, parseInt(date.substring(6, 8)));
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const targetDateEnd = new Date(targetDate.getTime() + 24 * 60 * 60 * 1000);
+        const maxDate = new Date(today.getTime() + 15 * 24 * 60 * 60 * 1000);
+
+        if (todayStart >= targetDateEnd || maxDate < targetDate) {
             throw new Error('日期需为0~15天内');
         }
         if (this.ticketCache[date + from + to]) {
@@ -55,7 +61,7 @@ class ChinaRailway {
         }
         const api =
             'https://kyfw.12306.cn/otn/leftTicket/queryG?leftTicketDTO.train_date=' +
-            moment(date, 'YYYYMMDD').format('YYYY-MM-DD') +
+            format(targetDate, 'yyyy-MM-dd') +
             '&leftTicketDTO.from_station=' +
             from +
             '&leftTicketDTO.to_station=' +
