@@ -16,9 +16,9 @@
 
 ### 2. 运行
 
-将 [配置](#配置) 好的 `config.json` 放置于可执行程序相同目录下后，直接运行即可。
+将 [配置](#配置) 好的 `config.jsonc` 放置于可执行程序相同目录下后，直接运行即可。
 
-或者，运行一次程序后，修改生成的 `config.json`。
+或者，运行一次程序后，修改生成的 `config.jsonc`。
 
 ## 手动部署
 
@@ -43,13 +43,11 @@ $ cd CRTicketMonitor
 
 ## 配置
 
-若 `config.json` 不存在，启动 CRTM 会自动生成 `config.json`，可在其基础上进行更改。
+若 `config.jsonc` 不存在，启动 CRTM 会自动生成 `config.jsonc`，可在其基础上进行更改。
 
-建议使用 [Visual Studio Code](https://code.visualstudio.com) 或其他现代编辑器打开 `config.json`，从而享受自动配置文件格式检查。
+建议使用 [Visual Studio Code](https://code.visualstudio.com) 或其他现代编辑器打开 `config.jsonc`，从而享受自动配置文件格式检查。
 
-下面的模板是 `config.json` 中全部可用的配置项及其说明。
-
-需要注意，`JSON`文件不允许出现注释，如果使用下面的模板，请删除所有 `//` 开头的内容。
+下面的模板是 `config.jsonc` 中全部可用的配置项及其说明。
 
 ```jsonc
 {
@@ -117,7 +115,7 @@ $ cd CRTicketMonitor
 
 ## 推送配置
 
-在 `config.json` 中，选择以下推送配置项中的一项或多项填写。
+在 `config.jsonc` 中，选择以下推送配置项中的一项或多项填写。
 
 同一种类的配置项可以设置多个。
 
@@ -125,7 +123,7 @@ $ cd CRTicketMonitor
 
 门槛最低的推送方式，只需保持浏览器后台运行即可。
 
-无需额外配置，直接运行即可。如果运行时提示端口 `Permission denied`，需修改 `config.json` 中的端口号后重试。端口号可以选择 1024\~65535 之间的数。~当然，你愿意的话 1\~1023 也可以~
+无需额外配置，直接运行即可。如果运行时提示端口 `Permission denied`，需修改 `config.jsonc` 中的端口号后重试。端口号可以选择 1024\~65535 之间的数。~当然，你愿意的话 1\~1023 也可以~
 
 运行后，用浏览器打开提示的网址，并允许浏览器进行系统通知即可。
 
@@ -135,13 +133,13 @@ $ cd CRTicketMonitor
 
 使用 [Wecom 酱](https://github.com/easychen/wecomchan)，可以直接将通知推送至个人微信。
 
-配置方法详见 [企业微信应用消息配置](https://github.com/easychen/wecomchan/blob/main/README.md#%E4%BC%81%E4%B8%9A%E5%BE%AE%E4%BF%A1%E5%BA%94%E7%94%A8%E6%B6%88%E6%81%AF%E9%85%8D%E7%BD%AE%E8%AF%B4%E6%98%8E)，将该文档中获取的 ①`agentid`、②`secret`、③`企业ID`三项内容分别填入 `config.json` 即可。
+配置方法详见 [企业微信应用消息配置](https://github.com/easychen/wecomchan/blob/main/README.md#%E4%BC%81%E4%B8%9A%E5%BE%AE%E4%BF%A1%E5%BA%94%E7%94%A8%E6%B6%88%E6%81%AF%E9%85%8D%E7%BD%AE%E8%AF%B4%E6%98%8E)，将该文档中获取的 ①`agentid`、②`secret`、③`企业ID`三项内容分别填入 `config.jsonc` 即可。
 
 ### HTTP 推送
 
 可以搭配 [OneBot](https://github.com/botuniverse/onebot-11)、[Sever 酱 Turbo](https://sct.ftqq.com/)、[IFTTT](https://ifttt.com/maker_webhooks) 或其他任何可以使用 HTTP API 进行推送的平台进行推送。
 
-直接在 `config.json` 中填写 URL 即可，消息的内容在经过 URL Encode 后会被拼接至 URL 末尾。
+直接在 `config.jsonc` 中填写 URL 即可，消息的内容在经过 URL Encode 后会被拼接至 URL 末尾。
 
 使用例（供参考）：
 

@@ -8,12 +8,13 @@
     "imports": {
         "@std/datetime": "jsr:@std/datetime@^0.225.0",
         "@std/fmt": "jsr:@std/fmt@^1.0.0",
-        "@opensrc/deno-open": "jsr:@opensrc/deno-open"
+        "@opensrc/deno-open": "jsr:@opensrc/deno-open",
+        "@std/jsonc": "jsr:@std/jsonc"
     },
     "tasks": {
         "start": "deno run --allow-net --allow-read --allow-write --allow-run --allow-sys --allow-env src/index.ts",
-        "build": "deno compile --allow-net --allow-read --allow-write --allow-run --allow-sys --allow-env --include=config.example.json --include=browser --icon=assets/cr.ico --output=dist/CRTM src/index.ts",
-        "build:ci": "deno compile --target=$BUILD_TARGET --allow-net --allow-read --allow-write --allow-run --allow-sys --allow-env --include=config.example.json --include=browser $EXTRA_ARGS --output=$BUILD_OUTPUT src/index.ts"
+        "build": "deno compile --allow-net --allow-read --allow-write --allow-run --allow-sys --allow-env --include=config.example.jsonc --include=browser --icon=assets/cr.ico --output=dist/CRTM src/index.ts",
+        "build:ci": "deno compile --target=$BUILD_TARGET --allow-net --allow-read --allow-write --allow-run --allow-sys --allow-env --include=config.example.jsonc --include=browser $EXTRA_ARGS --output=$BUILD_OUTPUT src/index.ts"
     },
     "compilerOptions": {
         "lib": ["deno.window", "deno.ns", "es2022"]

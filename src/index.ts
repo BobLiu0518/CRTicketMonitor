@@ -1,3 +1,4 @@
+import { parse as parseJsonc } from '@std/jsonc';
 import ChinaRailway from './cr.ts';
 import Notifications, { type NotificationBase } from './notifications.ts';
 import { sleep, time, log, asset } from './utils.ts';
@@ -150,21 +151,21 @@ async function update(): Promise<void> {
 
 async function checkConfig(): Promise<void> {
     try {
-        const configText = Deno.readTextFileSync('config.json');
-        config = JSON.parse(configText) as Config;
+        const configText = Deno.readTextFileSync('config.jsonc');
+        config = parseJsonc(configText) as unknown as Config;
     } catch (err) {
         if (err instanceof Deno.errors.NotFound) {
-            log.error('config.json 不存在');
+            log.error('config.jsonc 不存在');
             try {
-                Deno.writeTextFileSync('config.json', await asset('config.example.json'));
-                log.info('已自动创建 config.json');
+                Deno.writeTextFileSync('config.jsonc', await asset('config.example.jsonc'));
+                log.info('已自动创建 config.jsonc');
                 log.info('请根据需要修改后重启程序');
             } catch (_err) {
-                log.error('创建 config.json 失败');
+                log.error('创建 config.jsonc 失败');
                 log.info('请自行创建后重启程序');
             }
         } else {
-            log.error('读取 config.json 时发生错误：', err);
+            log.error('读取 config.jsonc 时发生错误：', err);
         }
         die();
     }
